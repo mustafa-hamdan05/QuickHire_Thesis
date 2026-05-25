@@ -1,11 +1,13 @@
 package com.gigflow.config;
 
-import com.gigflow.model.*;
-import com.gigflow.repository.*;
+import com.gigflow.model.Role;
+import com.gigflow.model.Task;
+import com.gigflow.model.User;
+import com.gigflow.repository.TaskRepository;
+import com.gigflow.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import java.time.LocalDateTime;
 
 @Component
 public class DataSeeder implements CommandLineRunner {
@@ -14,87 +16,178 @@ public class DataSeeder implements CommandLineRunner {
     private final TaskRepository tasks;
     private final PasswordEncoder encoder;
 
-    public DataSeeder(UserRepository users, TaskRepository tasks, PasswordEncoder encoder) {
+    public DataSeeder(UserRepository users,
+                      TaskRepository tasks,
+                      PasswordEncoder encoder) {
         this.users = users;
         this.tasks = tasks;
         this.encoder = encoder;
     }
 
+    @Override
     public void run(String... args) {
-        if (tasks.count() >= 13) return;
 
         User client;
 
         if (users.findByEmail("client@gigflow.com").isPresent()) {
+
             client = users.findByEmail("client@gigflow.com").get();
+
         } else {
-            client = users.save(User.builder()
-                    .name("Demo Client")
-                    .email("client@gigflow.com")
-                    .password(encoder.encode("123456"))
-                    .role(Role.CLIENT)
-                    .bio("Hiring manager")
-                    .location("Budapest")
-                    .rating(4.8)
-                    .build());
+
+            User newClient = new User();
+
+            newClient.setName("Demo Client");
+            newClient.setEmail("client@gigflow.com");
+            newClient.setPassword(encoder.encode("123456"));
+            newClient.setRole(Role.CLIENT);
+            newClient.setBio("Hiring manager");
+            newClient.setLocation("Budapest");
+            newClient.setRating(4.8);
+
+            client = users.save(newClient);
         }
 
-        if (users.findByEmail("sara@gigflow.com").isEmpty()) {
-            users.save(User.builder()
-                    .name("Sara Developer")
-                    .email("sara@gigflow.com")
-                    .password(encoder.encode("123456"))
-                    .role(Role.FREELANCER)
-                    .bio("Frontend freelancer")
-                    .skills("React, JavaScript, CSS")
-                    .availability("Available today")
-                    .location("Budapest")
-                    .rating(4.9)
-                    .build());
+        if (tasks.count() == 0) {
+
+            createTask(
+                    "Frontend Website Assistant",
+                    "Help improve a company landing page using React and CSS.",
+                    "React, CSS, HTML",
+                    "Budapest",
+                    22,
+                    client
+            );
+
+            createTask(
+                    "Event Registration Support",
+                    "Assist with guest check-ins and registration tasks.",
+                    "Communication, Organization",
+                    "Budapest",
+                    18,
+                    client
+            );
+
+            createTask(
+                    "Mobile App Tester",
+                    "Test Android application features and report bugs.",
+                    "Android, Testing",
+                    "Debrecen",
+                    20,
+                    client
+            );
+
+            createTask(
+                    "Logo and Branding Designer",
+                    "Design logos and social media branding kits.",
+                    "Photoshop, Illustrator",
+                    "Szeged",
+                    25,
+                    client
+            );
+
+            createTask(
+                    "Social Media Content Creator",
+                    "Create Instagram and TikTok promotional content.",
+                    "Marketing, Canva",
+                    "Budapest",
+                    19,
+                    client
+            );
+
+            createTask(
+                    "Data Entry Assistant",
+                    "Organize and update spreadsheet information.",
+                    "Excel, Attention to detail",
+                    "Miskolc",
+                    16,
+                    client
+            );
+
+            createTask(
+                    "Photography Assistant",
+                    "Assist photographer during event shoots.",
+                    "Photography",
+                    "Győr",
+                    21,
+                    client
+            );
+
+            createTask(
+                    "Restaurant Shift Helper",
+                    "Support restaurant staff during busy hours.",
+                    "Customer Service",
+                    "Budapest",
+                    17,
+                    client
+            );
+
+            createTask(
+                    "Backend API Helper",
+                    "Assist with REST API testing and backend fixes.",
+                    "Java, Spring Boot",
+                    "Budapest",
+                    26,
+                    client
+            );
+
+            createTask(
+                    "Translation Assistant",
+                    "Translate short documents between English and Hungarian.",
+                    "Translation",
+                    "Pécs",
+                    20,
+                    client
+            );
+
+            createTask(
+                    "University Event Promoter",
+                    "Promote upcoming university events online.",
+                    "Marketing",
+                    "Budapest",
+                    15,
+                    client
+            );
+
+            createTask(
+                    "Video Editing Assistant",
+                    "Edit short promotional videos for social media.",
+                    "Premiere Pro, Editing",
+                    "Szeged",
+                    24,
+                    client
+            );
+
+            createTask(
+                    "Customer Support Freelance",
+                    "Respond to customer support tickets remotely.",
+                    "Communication",
+                    "Remote",
+                    23,
+                    client
+            );
         }
-
-        if (users.findByEmail("omar@gigflow.com").isEmpty()) {
-            users.save(User.builder()
-                    .name("Omar Designer")
-                    .email("omar@gigflow.com")
-                    .password(encoder.encode("123456"))
-                    .role(Role.FREELANCER)
-                    .bio("UI/UX and branding specialist")
-                    .skills("Figma, UI Design, Branding")
-                    .availability("Available this week")
-                    .location("Debrecen")
-                    .rating(4.7)
-                    .build());
-        }
-
-        if (tasks.count() > 0) return;
-
-        addTask("Frontend Website Assistant", "Help build a landing page and dashboard UI.", "Web Development", "React, CSS", "Budapest", 22.0, client);
-        addTask("Event Registration Support", "Support check-in desk for a business event.", "Event Staff", "Communication, Organization", "Budapest", 18.0, client);
-        addTask("Mobile App Tester", "Test Android app screens and report bugs clearly.", "Testing", "Android, QA, Bug Reports", "Debrecen", 16.0, client);
-        addTask("Logo and Branding Designer", "Create a simple brand identity for a small business.", "Design", "Figma, Branding, Illustrator", "Szeged", 24.0, client);
-        addTask("Social Media Content Creator", "Prepare weekly posts for Instagram and TikTok.", "Marketing", "Canva, Copywriting, Social Media", "Budapest", 20.0, client);
-        addTask("Data Entry Assistant", "Organize spreadsheet records and clean customer data.", "Admin", "Excel, Accuracy, Data Entry", "Remote", 14.0, client);
-        addTask("Photography Assistant", "Help with lighting, setup, and client coordination.", "Photography", "Camera Setup, Communication", "Pecs", 19.0, client);
-        addTask("Restaurant Shift Helper", "Support evening restaurant operations during busy hours.", "Hospitality", "Teamwork, Customer Service", "Budapest", 15.0, client);
-        addTask("Backend API Helper", "Assist with Spring Boot REST API testing and documentation.", "Backend Development", "Java, Spring Boot, REST API", "Remote", 26.0, client);
-        addTask("Translation Assistant", "Translate short business documents from English to Hungarian.", "Translation", "English, Hungarian, Writing", "Remote", 21.0, client);
-        addTask("University Event Promoter", "Promote a student event and help manage attendees.", "Promotion", "Communication, Sales, Events", "Debrecen", 17.0, client);
-        addTask("Video Editing Assistant", "Edit short promotional clips for online campaigns.", "Video Editing", "Premiere Pro, CapCut, Creativity", "Remote", 23.0, client);
-        addTask("Customer Support Freelancer", "Reply to customer questions and organize support requests.", "Customer Support", "Email, Communication, Problem Solving", "Budapest", 18.0, client);
     }
 
-    private void addTask(String title, String description, String category, String skills, String location, Double rate, User client) {
-        tasks.save(Task.builder()
-                .title(title)
-                .description(description)
-                .category(category)
-                .requiredSkills(skills)
-                .location(location)
-                .hourlyRate(rate)
-                .status("open")
-                .createdAt(LocalDateTime.now())
-                .client(client)
-                .build());
+    private void createTask(String title,
+                            String description,
+                            String skills,
+                            String location,
+                            double rate,
+                            User client) {
+
+        Task task = new Task();
+
+        task.setTitle(title);
+        task.setDescription(description);
+        task.setRequiredSkills(skills);
+        task.setLocation(location);
+        task.setHourlyRate(rate);
+        task.setCategory("General");
+        task.setStatus("open");
+        task.setCreatedAt(java.time.LocalDateTime.now());
+        task.setClient(client);
+
+        tasks.save(task);
     }
 }
