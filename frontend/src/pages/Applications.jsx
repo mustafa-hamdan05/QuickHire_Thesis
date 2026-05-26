@@ -3,9 +3,19 @@ import React, { useEffect, useState } from "react";
 export default function Applications() {
   const [applications, setApplications] = useState([]);
 
-  useEffect(() => {
+  function loadApplications() {
     const saved = JSON.parse(localStorage.getItem("applications") || "[]");
     setApplications(saved);
+  }
+
+  useEffect(() => {
+    loadApplications();
+
+    window.addEventListener("focus", loadApplications);
+
+    return () => {
+      window.removeEventListener("focus", loadApplications);
+    };
   }, []);
 
   function updateStatus(id, status) {
