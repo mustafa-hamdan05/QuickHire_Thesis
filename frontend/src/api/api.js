@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8080/api";
+const API_URL = "https://quickhire-backend-5jdz.onrender.com/api";
 
 function authHeader() {
   const token = localStorage.getItem("token");
