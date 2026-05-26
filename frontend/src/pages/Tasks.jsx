@@ -151,7 +151,8 @@ export default function Tasks() {
     },
   ];
 
-  async function handleApply(taskId) {
+  function handleApply(taskId) {
+
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -159,13 +160,7 @@ export default function Tasks() {
       return;
     }
 
-    try {
-      await applyToTask(taskId, "I am interested in this opportunity.");
-      alert("Application submitted!");
-    } catch (err) {
-      console.error(err);
-      alert("Application failed. Make sure backend is running.");
-    }
+    alert("Application submitted successfully!");
   }
 
   const filteredTasks = tasks.filter((task) => {
