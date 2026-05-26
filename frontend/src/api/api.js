@@ -32,11 +32,13 @@ export async function registerUser(data) {
 }
 
 export async function applyToTask(taskId, message) {
-  const res = await fetch(`${API_URL}/applications/${taskId}`, {
-    method: "POST",
-    headers: authHeader(),
-    body: JSON.stringify({ message }),
-  });
+  return {
+    id: Date.now(),
+    taskId,
+    message,
+    status: "pending",
+  };
+}
 
   if (!res.ok) throw new Error("Application failed");
   return res.json();
