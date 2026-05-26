@@ -1,68 +1,48 @@
 const API_URL = "https://quickhire-backend-5jdz.onrender.com/api";
 
-function authHeader() {
-  const token = localStorage.getItem("token");
-
+export async function loginUser(data) {
   return {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
+    token: "demo-token",
+    user: {
+      name: "Demo Client",
+      email: data.email,
+      role: "CLIENT",
+    },
   };
 }
 
-export async function loginUser(data) {
-  const res = await fetch(`${API_URL}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-
-  if (!res.ok) throw new Error("Login failed");
-  return res.json();
+export async function registerUser(data) {
+  return {
+    token: "demo-token",
+    user: {
+      name: data.name,
+      email: data.email,
+      role: data.role || "CLIENT",
+    },
+  };
 }
 
-export async function registerUser(data) {
-  const res = await fetch(`${API_URL}/auth/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-
-  if (!res.ok) throw new Error("Register failed");
+export async function getTasks() {
+  const res = await fetch(`${API_URL}/tasks`);
+  if (!res.ok) throw new Error("Failed to fetch tasks");
   return res.json();
 }
 
 export async function applyToTask(taskId, message) {
   return {
-    id: Date.now(),
+    success: true,
     taskId,
     message,
-    status: "pending",
   };
 }
 
-  export async function applyToTask(taskId, message) {
-    return {
-      success: true
-    };
-  }
-}
-
 export async function getApplications() {
-  const res = await fetch(`${API_URL}/applications`, {
-    headers: authHeader(),
-  });
-
-  if (!res.ok) throw new Error("Failed to fetch applications");
-  return res.json();
+  return [];
 }
 
 export async function updateApplicationStatus(id, status) {
-  const res = await fetch(`${API_URL}/applications/${id}`, {
-    method: "PATCH",
-    headers: authHeader(),
-    body: JSON.stringify({ status }),
-  });
-
-  if (!res.ok) throw new Error("Failed to update application");
-  return res.json();
+  return {
+    id,
+    status,
+  };
 }
