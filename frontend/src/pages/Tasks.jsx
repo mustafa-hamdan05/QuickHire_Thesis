@@ -158,24 +158,26 @@ export default function Tasks() {
       return;
     }
 
-    const existing = JSON.parse(localStorage.getItem("applications") || "[]");
+    const selectedTask = tasks.find((task) => task.id === taskId);
 
-    const task = tasks.find((t) => t.id === taskId);
+    const existingApplications = JSON.parse(
+      localStorage.getItem("applications") || "[]"
+    );
 
     const newApplication = {
       id: Date.now(),
-      task: task?.title || "Unknown Gig",
+      task: selectedTask.title,
       freelancer: "Demo Client",
-      role: "CLIENT",
+      role: "Applicant",
       message: "I am interested in this opportunity.",
       status: "pending",
-      score: task?.matchScore || 90,
-      budget: `€${task?.budget || 0}`,
+      score: selectedTask.matchScore,
+      budget: `€${selectedTask.budget}`,
     };
 
     localStorage.setItem(
       "applications",
-      JSON.stringify([...existing, newApplication])
+      JSON.stringify([...existingApplications, newApplication])
     );
 
     alert("Application submitted successfully!");
