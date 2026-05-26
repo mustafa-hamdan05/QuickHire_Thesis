@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import { getApplications, updateApplicationStatus } from "../api/api";
 
 export default function Applications() {
-  const [applications, setApplications] = useState([]);
+  const [applications, setApplications] = useState(
+    JSON.parse(localStorage.getItem("applications") || "[]")
+  );
   const [loading, setLoading] = useState(true);
 
   async function loadApplications() {

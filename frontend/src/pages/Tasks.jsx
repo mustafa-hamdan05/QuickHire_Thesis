@@ -151,13 +151,32 @@ export default function Tasks() {
   ];
 
   function handleApply(taskId) {
-
     const token = localStorage.getItem("token");
 
     if (!token) {
       alert("You must login first.");
       return;
     }
+
+    const existing = JSON.parse(localStorage.getItem("applications") || "[]");
+
+    const task = tasks.find((t) => t.id === taskId);
+
+    const newApplication = {
+      id: Date.now(),
+      task: task?.title || "Unknown Gig",
+      freelancer: "Demo Client",
+      role: "CLIENT",
+      message: "I am interested in this opportunity.",
+      status: "pending",
+      score: task?.matchScore || 90,
+      budget: `€${task?.budget || 0}`,
+    };
+
+    localStorage.setItem(
+      "applications",
+      JSON.stringify([...existing, newApplication])
+    );
 
     alert("Application submitted successfully!");
   }
