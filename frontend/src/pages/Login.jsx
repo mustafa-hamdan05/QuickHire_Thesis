@@ -17,16 +17,26 @@ export default function Login() {
   async function handleSubmit(e) {
     e.preventDefault();
 
-    try {
-      const data = await loginUser(form);
+    if (
+      form.email.trim() === "client@gigflow.com" &&
+      form.password.trim() === "123456"
+    ) {
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("token", "demo-token");
+
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          name: "Demo Client",
+          email: "client@gigflow.com",
+          role: "CLIENT",
+        })
+      );
 
       navigate("/dashboard");
-    } catch (err) {
+
+    } else {
       alert("Invalid login details");
-      console.error(err);
     }
   }
 
