@@ -167,7 +167,7 @@ export default function Tasks() {
     const newApplication = {
       id: Date.now(),
       task: selectedTask.title,
-      freelancer: "Demo Client",
+      freelancer: JSON.parse(localStorage.getItem("user") || "{}").name || "QuickHire User",
       role: "Applicant",
       message: "I am interested in this opportunity.",
       status: "pending",

@@ -6,7 +6,7 @@ export default function Login() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    email: "client@gigflow.com",
+    email: "client@quickhire.com",
     password: "123456",
   });
 
@@ -27,8 +27,8 @@ export default function Login() {
       localStorage.setItem(
         "user",
         JSON.stringify({
-          name: "Demo Client",
-          email: "client@gigflow.com",
+          name: "QuickHire Talent Hub",
+          email: "client@quickhire.com",
           role: "CLIENT",
         })
       );

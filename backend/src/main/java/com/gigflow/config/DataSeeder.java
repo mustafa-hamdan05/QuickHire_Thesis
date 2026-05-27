@@ -29,13 +29,13 @@ public class DataSeeder implements CommandLineRunner {
 
         User client;
 
-        if (users.findByEmail("client@gigflow.com").isPresent()) {
-            client = users.findByEmail("client@gigflow.com").get();
+        if (users.findByEmail("client@quickhire.com").isPresent()) {
+            client = users.findByEmail("client@quickhire.com").get();
         } else {
             User newClient = new User();
 
-            newClient.setName("Demo Client");
-            newClient.setEmail("client@gigflow.com");
+            newClient.setName("QuickHire Talent Hub");
+            newClient.setEmail("client@quickhire.com");
             newClient.setPassword(encoder.encode("123456"));
             newClient.setRole(Role.CLIENT);
             newClient.setBio("Hiring manager");
