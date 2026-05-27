@@ -30,11 +30,8 @@ public class DataSeeder implements CommandLineRunner {
         User client;
 
         if (users.findByEmail("client@gigflow.com").isPresent()) {
-
             client = users.findByEmail("client@gigflow.com").get();
-
         } else {
-
             User newClient = new User();
 
             newClient.setName("Demo Client");
@@ -53,6 +50,7 @@ public class DataSeeder implements CommandLineRunner {
             createTask(
                     "Frontend Website Assistant",
                     "Help improve a company landing page using React and CSS.",
+                    "Web Development",
                     "React, CSS, HTML",
                     "Budapest",
                     22,
@@ -62,6 +60,7 @@ public class DataSeeder implements CommandLineRunner {
             createTask(
                     "Event Registration Support",
                     "Assist with guest check-ins and registration tasks.",
+                    "Event Staff",
                     "Communication, Organization",
                     "Budapest",
                     18,
@@ -71,6 +70,7 @@ public class DataSeeder implements CommandLineRunner {
             createTask(
                     "Mobile App Tester",
                     "Test Android application features and report bugs.",
+                    "Web Development",
                     "Android, Testing",
                     "Debrecen",
                     20,
@@ -80,6 +80,7 @@ public class DataSeeder implements CommandLineRunner {
             createTask(
                     "Logo and Branding Designer",
                     "Design logos and social media branding kits.",
+                    "Design",
                     "Photoshop, Illustrator",
                     "Szeged",
                     25,
@@ -89,6 +90,7 @@ public class DataSeeder implements CommandLineRunner {
             createTask(
                     "Social Media Content Creator",
                     "Create Instagram and TikTok promotional content.",
+                    "Marketing",
                     "Marketing, Canva",
                     "Budapest",
                     19,
@@ -98,6 +100,7 @@ public class DataSeeder implements CommandLineRunner {
             createTask(
                     "Data Entry Assistant",
                     "Organize and update spreadsheet information.",
+                    "Logistics",
                     "Excel, Attention to detail",
                     "Miskolc",
                     16,
@@ -107,6 +110,7 @@ public class DataSeeder implements CommandLineRunner {
             createTask(
                     "Photography Assistant",
                     "Assist photographer during event shoots.",
+                    "Design",
                     "Photography",
                     "Győr",
                     21,
@@ -116,6 +120,7 @@ public class DataSeeder implements CommandLineRunner {
             createTask(
                     "Restaurant Shift Helper",
                     "Support restaurant staff during busy hours.",
+                    "Hospitality",
                     "Customer Service",
                     "Budapest",
                     17,
@@ -125,6 +130,7 @@ public class DataSeeder implements CommandLineRunner {
             createTask(
                     "Backend API Helper",
                     "Assist with REST API testing and backend fixes.",
+                    "Web Development",
                     "Java, Spring Boot",
                     "Budapest",
                     26,
@@ -134,6 +140,7 @@ public class DataSeeder implements CommandLineRunner {
             createTask(
                     "Translation Assistant",
                     "Translate short documents between English and Hungarian.",
+                    "Marketing",
                     "Translation",
                     "Pécs",
                     20,
@@ -144,6 +151,7 @@ public class DataSeeder implements CommandLineRunner {
                     "University Event Promoter",
                     "Promote upcoming university events online.",
                     "Marketing",
+                    "Marketing",
                     "Budapest",
                     15,
                     client
@@ -152,6 +160,7 @@ public class DataSeeder implements CommandLineRunner {
             createTask(
                     "Video Editing Assistant",
                     "Edit short promotional videos for social media.",
+                    "Design",
                     "Premiere Pro, Editing",
                     "Szeged",
                     24,
@@ -161,6 +170,7 @@ public class DataSeeder implements CommandLineRunner {
             createTask(
                     "Customer Support Freelance",
                     "Respond to customer support tickets remotely.",
+                    "Hospitality",
                     "Communication",
                     "Remote",
                     23,
@@ -171,6 +181,7 @@ public class DataSeeder implements CommandLineRunner {
 
     private void createTask(String title,
                             String description,
+                            String category,
                             String skills,
                             String location,
                             double rate,
@@ -180,10 +191,10 @@ public class DataSeeder implements CommandLineRunner {
 
         task.setTitle(title);
         task.setDescription(description);
+        task.setCategory(category);
         task.setRequiredSkills(skills);
         task.setLocation(location);
         task.setHourlyRate(rate);
-        task.setCategory("General");
         task.setStatus("open");
         task.setCreatedAt(java.time.LocalDateTime.now());
         task.setClient(client);
