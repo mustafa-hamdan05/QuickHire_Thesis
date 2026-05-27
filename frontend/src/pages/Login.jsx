@@ -18,7 +18,7 @@ export default function Login() {
     e.preventDefault();
 
     if (
-      form.email.trim() === "client@gigflow.com" &&
+      form.email.trim() === "client@quickhire.com" &&
       form.password.trim() === "123456"
     ) {
 
