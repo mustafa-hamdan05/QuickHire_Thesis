@@ -1466,3 +1466,39 @@ input:focus, textarea:focus, select:focus {
 .heroLogoStage svg {
   filter: drop-shadow(0 30px 60px rgba(205, 42, 62, 0.18));
 }
+/* ============================================================
+   HOMEPAGE POLISH — category icons + scroll reveal. Additive.
+   ============================================================ */
+
+/* Colorful icon badge on each category card */
+.categoryIcon {
+  width: 60px;
+  height: 60px;
+  border-radius: 18px;
+  background: #f0fff6;
+  display: grid;
+  place-items: center;
+  font-size: 30px;
+  margin-bottom: 18px;
+}
+.categoryCard:nth-child(even) .categoryIcon {
+  background: #fff5f6;
+}
+
+/* Make the hero "Find Gigs" button behave (it's now a <button>) */
+.searchPanel .searchBtn {
+  border: none;
+  cursor: pointer;
+}
+
+/* Scroll fade-in. The .reveal-init class is only added by JS,
+   so without JS the content shows normally (never stuck hidden). */
+.reveal-init {
+  opacity: 0;
+  transform: translateY(24px);
+}
+.reveal-init.reveal-show {
+  opacity: 1;
+  transform: none;
+  transition: opacity .6s ease, transform .6s ease;
+}

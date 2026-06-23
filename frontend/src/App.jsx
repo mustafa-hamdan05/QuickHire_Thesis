@@ -1,7 +1,6 @@
-import React from "react";
-import { Routes, Route, Navigate, Link } from "react-router-dom";
+import React, { useState, useEffect, useLayoutEffect } from "react";
+import { Routes, Route, Navigate, Link, useNavigate } from "react-router-dom";
 
-import Logo from "./components/Logo.jsx";
 import Navbar from "./components/Navbar.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Tasks from "./pages/Tasks.jsx";
@@ -12,13 +11,24 @@ import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import PostGig from "./pages/PostGig.jsx";
 
+const API_URL = "https://quickhire-backend-5jdz.onrender.com/api";
+
 function HomePage() {
+  const navigate = useNavigate();
+
+  // Hero search state
+  const [heroCat, setHeroCat] = useState("All categories");
+  const [heroQuery, setHeroQuery] = useState("");
+
+  // Live gig count for the hero badge
+  const [gigCount, setGigCount] = useState(null);
+
   const categories = [
-    { title: "Web Development", jobs: ["Frontend Developer", "Backend Assistant", "Website Fixer"] },
-    { title: "Hospitality", jobs: ["Waiter", "Catering Assistant", "Hotel Support"] },
-    { title: "Logistics", jobs: ["Warehouse Assistant", "Mover", "Delivery Helper"] },
-    { title: "Marketing", jobs: ["Social Media Assistant", "Content Creator", "Brand Promoter"] },
-    { title: "Design", jobs: ["Graphic Designer", "UI Assistant", "Poster Designer"] }
+    { title: "Web Development", icon: "💻", jobs: ["Frontend Developer", "Backend Assistant", "Website Fixer"] },
+    { title: "Hospitality", icon: "🛎️", jobs: ["Waiter", "Catering Assistant", "Hotel Support"] },
+    { title: "Logistics", icon: "📦", jobs: ["Warehouse Assistant", "Mover", "Delivery Helper"] },
+    { title: "Marketing", icon: "📣", jobs: ["Social Media Assistant", "Content Creator", "Brand Promoter"] },
+    { title: "Design", icon: "🎨", jobs: ["Graphic Designer", "UI Assistant", "Poster Designer"] }
   ];
 
   const testimonials = [
@@ -38,6 +48,46 @@ function HomePage() {
       role: "Support Specialist"
     }
   ];
+
+  // Live gig count (falls back to a static number if the backend is asleep)
+  useEffect(() => {
+    let active = true;
+    fetch(`${API_URL}/tasks`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => { if (active) setGigCount(Array.isArray(d) ? d.length : 0); })
+      .catch(() => { if (active) setGigCount(null); });
+    return () => { active = false; };
+  }, []);
+
+  // Scroll fade-in. .reveal-init is added by JS only, so if JS fails the
+  // content stays fully visible (never stuck hidden). useLayoutEffect avoids a flash.
+  useLayoutEffect(() => {
+    const els = Array.from(document.querySelectorAll(".reveal"));
+    els.forEach((el) => el.classList.add("reveal-init"));
+
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add("reveal-show");
+            obs.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.12 }
+    );
+
+    els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+
+  function findGigs() {
+    const sp = new URLSearchParams();
+    if (heroCat && heroCat !== "All categories") sp.set("category", heroCat);
+    if (heroQuery.trim()) sp.set("search", heroQuery.trim());
+    const qs = sp.toString();
+    navigate(`/tasks${qs ? `?${qs}` : ""}`);
+  }
 
   return (
     <>
@@ -60,44 +110,55 @@ function HomePage() {
         </div>
 
         <div className="heroRight">
-            <div className="dashboardPreview">
-              <div className="previewTop">
-                <span>Recommended Gig</span>
-                <strong>94% Match</strong>
-              </div>
+          {/* subtle Hungarian-flag accent blobs (styles already in your CSS) */}
+          <span className="huStripe red"></span>
+          <span className="huStripe white"></span>
+          <span className="huStripe green"></span>
 
-              <h3>Frontend Website Assistant</h3>
-              <p>Budapest • Today • €22/hr</p>
-
-              <div className="miniStats">
-                <div><strong>React</strong><span>Skill</span></div>
-                <div><strong>4.8★</strong><span>Rating</span></div>
-                <div><strong>Now</strong><span>Available</span></div>
-              </div>
+          <div className="dashboardPreview">
+            <div className="previewTop">
+              <span>Recommended Gig</span>
+              <strong>94% Match</strong>
             </div>
 
-            <div className="smallPreview">
-              <strong>24 new gigs</strong>
-              <span>available this week</span>
+            <h3>Frontend Website Assistant</h3>
+            <p>Budapest • Today • €22/hr</p>
+
+            <div className="miniStats">
+              <div><strong>React</strong><span>Skill</span></div>
+              <div><strong>4.8★</strong><span>Rating</span></div>
+              <div><strong>Now</strong><span>Available</span></div>
             </div>
           </div>
+
+          <div className="smallPreview">
+            <strong>{gigCount == null ? "24" : gigCount} new gigs</strong>
+            <span>available this week</span>
+          </div>
+        </div>
       </section>
 
       <section className="searchPanel">
-        <select>
+        <select value={heroCat} onChange={(e) => setHeroCat(e.target.value)}>
           <option>All categories</option>
           <option>Web Development</option>
-          <option>Hospitality</option>
-          <option>Logistics</option>
           <option>Marketing</option>
+          <option>Hospitality</option>
           <option>Design</option>
+          <option>Event Staff</option>
+          <option>Logistics</option>
         </select>
 
-        <input placeholder="Search by city or remote" />
-        <Link to="/tasks" className="searchBtn">Find Gigs</Link>
+        <input
+          placeholder="Search by city or remote"
+          value={heroQuery}
+          onChange={(e) => setHeroQuery(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") findGigs(); }}
+        />
+        <button className="searchBtn" onClick={findGigs}>Find Gigs</button>
       </section>
 
-      <section className="infoSection">
+      <section className="infoSection reveal">
         <div className="infoText">
           <p className="label redText">Why QuickHire?</p>
           <h2>A smarter way to manage short-term freelance work.</h2>
@@ -128,13 +189,14 @@ function HomePage() {
         </div>
       </section>
 
-      <section className="categorySection">
+      <section className="categorySection reveal">
         <p className="label">Job categories</p>
         <h2>What is your next gig?</h2>
 
         <div className="categoryGrid">
           {categories.map((cat) => (
             <div className="categoryCard" key={cat.title}>
+              <div className="categoryIcon">{cat.icon}</div>
               <h3>{cat.title}</h3>
               {cat.jobs.map((job) => (
                 <p key={job}>{job}</p>
@@ -144,7 +206,7 @@ function HomePage() {
         </div>
       </section>
 
-      <section className="upgradeSection">
+      <section className="upgradeSection reveal">
         <div className="upgradeCard">
           <h2>Upgrade your profile and increase your chances.</h2>
           <p>
@@ -172,7 +234,7 @@ function HomePage() {
         </div>
       </section>
 
-      <section className="earningsSection">
+      <section className="earningsSection reveal">
         <div>
           <h2>Maximise earnings, minimise uncertainty.</h2>
           <p>
@@ -200,7 +262,7 @@ function HomePage() {
         </div>
       </section>
 
-      <section className="testimonialSection">
+      <section className="testimonialSection reveal">
         <div className="testimonialTop">
           <h2>See what users say</h2>
           <Link to="/register" className="mainBtn">Join QuickHire</Link>

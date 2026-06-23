@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 const API_URL = "https://quickhire-backend-5jdz.onrender.com/api";
 
 export default function Tasks() {
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All");
+  const [params] = useSearchParams();
+    const [search, setSearch] = useState(params.get("search") || "");
+    const [category, setCategory] = useState(params.get("category") || "All");
   const [dbTasks, setDbTasks] = useState([]);
   const [details, setDetails] = useState(null); // NEW: which gig's details modal is open
 
