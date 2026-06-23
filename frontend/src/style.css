@@ -1456,3 +1456,13 @@ input:focus, textarea:focus, select:focus {
   font-weight: 800;
   margin-top: 4px;
 }
+/* Big hero logo */
+.heroLogoStage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+.heroLogoStage svg {
+  filter: drop-shadow(0 30px 60px rgba(205, 42, 62, 0.18));
+}

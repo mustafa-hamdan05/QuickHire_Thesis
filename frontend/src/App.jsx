@@ -1,6 +1,7 @@
 import React from "react";
 import { Routes, Route, Navigate, Link } from "react-router-dom";
 
+import Logo from "./components/Logo.jsx";
 import Navbar from "./components/Navbar.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Tasks from "./pages/Tasks.jsx";
@@ -59,27 +60,15 @@ function HomePage() {
         </div>
 
         <div className="heroRight">
-          <div className="dashboardPreview">
-            <div className="previewTop">
-              <span>Recommended Gig</span>
-              <strong>94% Match</strong>
+            <div className="heroLogoStage">
+              <Logo size={360} />
             </div>
 
-            <h3>Frontend Website Assistant</h3>
-            <p>Budapest • Today • €22/hr</p>
-
-            <div className="miniStats">
-              <div><strong>React</strong><span>Skill</span></div>
-              <div><strong>4.8★</strong><span>Rating</span></div>
-              <div><strong>Now</strong><span>Available</span></div>
+            <div className="smallPreview">
+              <strong>24 new gigs</strong>
+              <span>available this week</span>
             </div>
           </div>
-
-          <div className="smallPreview">
-            <strong>24 new gigs</strong>
-            <span>available this week</span>
-          </div>
-        </div>
       </section>
 
       <section className="searchPanel">

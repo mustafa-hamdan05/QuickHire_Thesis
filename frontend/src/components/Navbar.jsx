@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import Logo from "./Logo.jsx";
 
 export default function Navbar() {
   const location = useLocation();
@@ -15,7 +16,8 @@ export default function Navbar() {
 
   return (
     <nav className="navbar">
-      <Link to="/" className="quickhireTextLogo">
+      <Link to="/" className="quickhireTextLogo" style={{ gap: 10 }}>
+        <Logo size={40} />
         QuickHire
       </Link>
 
