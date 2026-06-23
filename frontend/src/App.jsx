@@ -60,8 +60,20 @@ function HomePage() {
         </div>
 
         <div className="heroRight">
-            <div className="heroLogoStage">
-              <Logo size={360} />
+            <div className="dashboardPreview">
+              <div className="previewTop">
+                <span>Recommended Gig</span>
+                <strong>94% Match</strong>
+              </div>
+
+              <h3>Frontend Website Assistant</h3>
+              <p>Budapest • Today • €22/hr</p>
+
+              <div className="miniStats">
+                <div><strong>React</strong><span>Skill</span></div>
+                <div><strong>4.8★</strong><span>Rating</span></div>
+                <div><strong>Now</strong><span>Available</span></div>
+              </div>
             </div>
 
             <div className="smallPreview">
