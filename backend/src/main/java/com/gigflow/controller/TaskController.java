@@ -8,7 +8,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/tasks")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {"http://localhost:5173", "https://quickhire-thesis.vercel.app"})
 public class TaskController {
 
     private final TaskRepository tasks;
@@ -24,6 +24,12 @@ public class TaskController {
 
     @PostMapping
     public Task create(@RequestBody Task task) {
+        if (task.getStatus() == null || task.getStatus().isBlank()) {
+            task.setStatus("OPEN");
+        }
+        if (task.getCreatedAt() == null) {
+            task.setCreatedAt(java.time.LocalDateTime.now());
+        }
         return tasks.save(task);
     }
 

@@ -9,6 +9,7 @@ import Applications from "./pages/Applications.jsx";
 import Profile from "./pages/Profile.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
+import PostGig from "./pages/PostGig.jsx";
 
 function HomePage() {
   const categories = [
