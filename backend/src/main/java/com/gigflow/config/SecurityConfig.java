@@ -38,6 +38,7 @@ public class SecurityConfig {
                                 "/",
                                 "/api/auth/**",
                                 "/api/tasks/**",
+                                "/api/recommendations/**",   // <-- add this line
                                 "/h2-console/**"
                         ).permitAll()
                         .anyRequest().authenticated()
