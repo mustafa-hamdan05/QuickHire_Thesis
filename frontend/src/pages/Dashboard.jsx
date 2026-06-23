@@ -1,11 +1,38 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+
+const API_URL = "https://quickhire-backend-5jdz.onrender.com/api";
 
 export default function Dashboard() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
+  // NEW: live count of gigs from the backend
+  const [taskCount, setTaskCount] = useState(null);
+
+  // NEW: real application data from localStorage
+  const apps = JSON.parse(localStorage.getItem("applications") || "[]");
+  const pending = apps.filter((a) => a.status === "pending").length;
+  const accepted = apps.filter((a) => a.status === "accepted");
+  const earnings = accepted.reduce((sum, a) => {
+    const n = parseInt(String(a.budget).replace(/[^0-9]/g, ""), 10);
+    return sum + (isNaN(n) ? 0 : n);
+  }, 0);
+
+  useEffect(() => {
+    let active = true;
+    fetch(`${API_URL}/tasks`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (active) setTaskCount(Array.isArray(data) ? data.length : 0);
+      })
+      .catch(() => {
+        if (active) setTaskCount(0);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
-
-
       <div className="dashPage">
         <div className="dashHero">
           <div>
@@ -26,26 +53,26 @@ export default function Dashboard() {
         <div className="dashStats">
           <div className="dashStat">
             <span>Active Gigs</span>
-            <strong>8</strong>
-            <small>+3 this week</small>
+            <strong>{taskCount === null ? "…" : taskCount}</strong>
+            <small>from the live database</small>
           </div>
 
           <div className="dashStat">
             <span>Applications</span>
-            <strong>14</strong>
-            <small>6 pending review</small>
+            <strong>{apps.length}</strong>
+            <small>{pending} pending review</small>
           </div>
 
           <div className="dashStat">
-            <span>Completed</span>
-            <strong>21</strong>
-            <small>92% success rate</small>
+            <span>Accepted</span>
+            <strong>{accepted.length}</strong>
+            <small>accepted applications</small>
           </div>
 
           <div className="dashStat">
             <span>Earnings</span>
-            <strong>€1,240</strong>
-            <small>Estimated monthly</small>
+            <strong>€{earnings.toLocaleString()}</strong>
+            <small>from accepted gigs</small>
           </div>
         </div>
 

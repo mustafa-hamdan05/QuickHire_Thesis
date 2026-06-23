@@ -7,8 +7,15 @@ export default function Tasks() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [dbTasks, setDbTasks] = useState([]);
+  const [details, setDetails] = useState(null); // NEW: which gig's details modal is open
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  // NEW: titles the user has already applied to (so we can show "Applied" and block duplicates)
+  const [appliedTitles, setAppliedTitles] = useState(() => {
+    const apps = JSON.parse(localStorage.getItem("applications") || "[]");
+    return new Set(apps.map((a) => a.task));
+  });
 
   const demoTasks = [
     { id: 1, title: "Frontend Website Assistant", description: "Help improve a company landing page using React and CSS.", category: "Web Development", budget: 220, location: "Budapest", deadline: "Today", skills: "React, CSS, HTML", matchScore: 94 },
@@ -62,6 +69,14 @@ export default function Tasks() {
       return;
     }
     const selectedTask = allTasks.find((task) => task.id === taskId);
+    if (!selectedTask) return;
+
+    // NEW: block duplicate applications
+    if (appliedTitles.has(selectedTask.title)) {
+      alert("You already applied to this gig.");
+      return;
+    }
+
     const existingApplications = JSON.parse(localStorage.getItem("applications") || "[]");
     const newApplication = {
       id: Date.now(),
@@ -70,10 +85,13 @@ export default function Tasks() {
       role: "Applicant",
       message: "I am interested in this opportunity.",
       status: "pending",
-      score: selectedTask.matchScore,
+      score: selectedTask.matchScore, // may be null for real DB gigs — handled on the Applications page
       budget: `€${selectedTask.budget}`,
     };
     localStorage.setItem("applications", JSON.stringify([...existingApplications, newApplication]));
+
+    // NEW: update applied state so the button flips to "Applied"
+    setAppliedTitles((prev) => new Set(prev).add(selectedTask.title));
     alert("Application submitted successfully!");
   }
 
@@ -130,44 +148,146 @@ export default function Tasks() {
         </div>
 
         <div className="gigList">
-          {filteredTasks.map((task) => (
-            <div className="gigCardNew" key={task.id}>
-              <div className="gigTop">
-                <div>
-                  <span className="gigCategory">{task.category}</span>
-                  <h3>{task.title}</h3>
-                  <p>{task.description}</p>
+          {filteredTasks.map((task) => {
+            const isApplied = appliedTitles.has(task.title);
+            return (
+              <div className="gigCardNew" key={task.id}>
+                <div className="gigTop">
+                  <div>
+                    <span className="gigCategory">{task.category}</span>
+                    <h3>{task.title}</h3>
+                    <p>{task.description}</p>
+                  </div>
+
+                  <div className="gigPay">
+                    <strong>€{task.budget}</strong>
+                    <span>budget</span>
+                  </div>
                 </div>
 
-                <div className="gigPay">
-                  <strong>€{task.budget}</strong>
-                  <span>budget</span>
+                <div className="gigMeta">
+                  <span>📍 {task.location}</span>
+                  <span>🕒 {task.deadline}</span>
+                  {task.matchScore != null && <span>⭐ Match score: {task.matchScore}%</span>}
+                </div>
+
+                <div className="skillRow">
+                  {(task.skills || "")
+                    .split(",")
+                    .filter((s) => s.trim())
+                    .map((skill, index) => (
+                      <span key={index}>{skill.trim()}</span>
+                    ))}
+                </div>
+
+                <div className="gigActions">
+                  <button
+                    onClick={() => handleApply(task.id)}
+                    disabled={isApplied}
+                    style={isApplied ? { background: "#94a3b8", cursor: "default" } : undefined}
+                  >
+                    {isApplied ? "Applied ✓" : "Apply Now"}
+                  </button>
+                  <button className="outlineSmall" onClick={() => setDetails(task)}>
+                    View Details
+                  </button>
                 </div>
               </div>
-
-              <div className="gigMeta">
-                <span>📍 {task.location}</span>
-                <span>🕒 {task.deadline}</span>
-                {task.matchScore != null && <span>⭐ Match score: {task.matchScore}%</span>}
-              </div>
-
-              <div className="skillRow">
-                {(task.skills || "")
-                  .split(",")
-                  .filter((s) => s.trim())
-                  .map((skill, index) => (
-                    <span key={index}>{skill.trim()}</span>
-                  ))}
-              </div>
-
-              <div className="gigActions">
-                <button onClick={() => handleApply(task.id)}>Apply Now</button>
-                <button className="outlineSmall">View Details</button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </main>
+
+      {/* NEW: gig details modal */}
+      {details && (
+        <div
+          onClick={() => setDetails(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15, 23, 42, 0.55)",
+            display: "grid",
+            placeItems: "center",
+            zIndex: 200,
+            padding: 20,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "white",
+              borderRadius: 28,
+              padding: 36,
+              maxWidth: 560,
+              width: "100%",
+              position: "relative",
+              boxShadow: "0 30px 70px rgba(0,0,0,0.25)",
+            }}
+          >
+            <button
+              onClick={() => setDetails(null)}
+              style={{
+                position: "absolute",
+                top: 18,
+                right: 18,
+                border: "none",
+                background: "#f5f7fb",
+                borderRadius: 12,
+                width: 40,
+                height: 40,
+                fontSize: 20,
+                fontWeight: 900,
+                cursor: "pointer",
+                color: "#0f172a",
+              }}
+              aria-label="Close"
+            >
+              ×
+            </button>
+
+            <span className="gigCategory">{details.category}</span>
+            <h2 style={{ fontSize: 32, margin: "6px 0 12px" }}>{details.title}</h2>
+            <p style={{ color: "#667085", lineHeight: 1.7 }}>{details.description}</p>
+
+            <div className="gigMeta" style={{ marginTop: 20 }}>
+              <span>📍 {details.location}</span>
+              <span>🕒 {details.deadline}</span>
+              <span>💶 €{details.budget} budget</span>
+              {details.matchScore != null && <span>⭐ {details.matchScore}% match</span>}
+            </div>
+
+            <div style={{ margin: "20px 0 8px", fontWeight: 800 }}>Required skills</div>
+            <div className="skillRow">
+              {(details.skills || "")
+                .split(",")
+                .filter((s) => s.trim())
+                .map((skill, index) => (
+                  <span key={index}>{skill.trim()}</span>
+                ))}
+            </div>
+
+            <div className="gigActions" style={{ marginTop: 26 }}>
+              <button
+                onClick={() => {
+                  handleApply(details.id);
+                  setDetails(null);
+                }}
+                disabled={appliedTitles.has(details.title)}
+                style={
+                  appliedTitles.has(details.title)
+                    ? { background: "#94a3b8", cursor: "default" }
+                    : undefined
+                }
+              >
+                {appliedTitles.has(details.title) ? "Applied ✓" : "Apply Now"}
+              </button>
+              <button className="outlineSmall" onClick={() => setDetails(null)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

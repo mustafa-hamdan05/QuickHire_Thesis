@@ -2,6 +2,7 @@ import React, { useState } from "react";
 
 export default function Freelancers() {
   const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(null); // NEW: which freelancer's profile is open
 
   const freelancers = [
     {
@@ -119,10 +120,91 @@ export default function Freelancers() {
                 ))}
               </div>
 
-              <button className="fullBtn">View Profile</button>
+              {/* NEW: View Profile now opens a modal */}
+              <button className="fullBtn" onClick={() => setSelected(f)}>
+                View Profile
+              </button>
             </div>
           ))}
         </div>
+
+        {/* NEW: Profile modal */}
+        {selected && (
+          <div
+            onClick={() => setSelected(null)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(15, 23, 42, 0.55)",
+              display: "grid",
+              placeItems: "center",
+              zIndex: 200,
+              padding: 20,
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: "white",
+                borderRadius: 28,
+                padding: 36,
+                maxWidth: 540,
+                width: "100%",
+                position: "relative",
+                boxShadow: "0 30px 70px rgba(0,0,0,0.25)",
+              }}
+            >
+              <button
+                onClick={() => setSelected(null)}
+                style={{
+                  position: "absolute",
+                  top: 18,
+                  right: 18,
+                  border: "none",
+                  background: "#f5f7fb",
+                  borderRadius: 12,
+                  width: 40,
+                  height: 40,
+                  fontSize: 20,
+                  fontWeight: 900,
+                  cursor: "pointer",
+                  color: "#0f172a",
+                }}
+                aria-label="Close"
+              >
+                ×
+              </button>
+
+              <div className="freelancerAvatar">{selected.name.charAt(0)}</div>
+              <h2 style={{ fontSize: 34, marginBottom: 4 }}>{selected.name}</h2>
+              <p className="roleText">{selected.role}</p>
+              <p style={{ color: "#667085", lineHeight: 1.7, margin: "10px 0 20px" }}>
+                {selected.bio}
+              </p>
+
+              <div className="freelancerMeta">
+                <span>📍 {selected.location}</span>
+                <span>⭐ {selected.rating}</span>
+                <span>🎯 {selected.score}% match</span>
+              </div>
+
+              <div style={{ margin: "20px 0 8px", fontWeight: 800 }}>Skills</div>
+              <div className="skillRow">
+                {selected.skills.map((skill) => (
+                  <span key={skill}>{skill}</span>
+                ))}
+              </div>
+
+              <button
+                className="mainBtn"
+                style={{ marginTop: 26 }}
+                onClick={() => setSelected(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
   );
 }

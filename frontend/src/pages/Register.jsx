@@ -22,6 +22,21 @@ export default function Register() {
     try {
       const data = await registerUser(form);
 
+      // NEW: remember this account so the user can log in again later
+      const accounts = JSON.parse(localStorage.getItem("accounts") || "[]");
+      const email = form.email.trim().toLowerCase();
+      const exists = accounts.some((a) => a.email.toLowerCase() === email);
+
+      if (!exists) {
+        accounts.push({
+          name: form.name.trim(),
+          email: form.email.trim(),
+          password: form.password,
+          role: form.role,
+        });
+        localStorage.setItem("accounts", JSON.stringify(accounts));
+      }
+
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 

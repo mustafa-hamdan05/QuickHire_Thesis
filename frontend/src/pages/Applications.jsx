@@ -72,7 +72,7 @@ export default function Applications() {
               <div className="applicationDetails">
                 <div>
                   <span>Match Score</span>
-                  <strong>{app.score}%</strong>
+                  <strong>{app.score != null ? `${app.score}%` : "—"}</strong>
                 </div>
                 <div>
                   <span>Budget</span>

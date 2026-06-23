@@ -17,13 +17,12 @@ export default function Login() {
   async function handleSubmit(e) {
     e.preventDefault();
 
-    if (
-      form.email.trim() === "client@quickhire.com" &&
-      form.password.trim() === "123456"
-    ) {
+    const email = form.email.trim().toLowerCase();
+    const password = form.password.trim();
 
+    // 1) Default built-in client account
+    if (email === "client@quickhire.com" && password === "123456") {
       localStorage.setItem("token", "demo-token");
-
       localStorage.setItem(
         "user",
         JSON.stringify({
@@ -32,12 +31,31 @@ export default function Login() {
           role: "CLIENT",
         })
       );
-
       navigate("/dashboard");
-
-    } else {
-      alert("Invalid login details");
+      return;
     }
+
+    // 2) NEW: accounts created through the Register page
+    const accounts = JSON.parse(localStorage.getItem("accounts") || "[]");
+    const match = accounts.find(
+      (a) => a.email.toLowerCase() === email && a.password === password
+    );
+
+    if (match) {
+      localStorage.setItem("token", "demo-token");
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          name: match.name,
+          email: match.email,
+          role: match.role || "FREELANCER",
+        })
+      );
+      navigate("/dashboard");
+      return;
+    }
+
+    alert("Invalid login details");
   }
 
   return (
