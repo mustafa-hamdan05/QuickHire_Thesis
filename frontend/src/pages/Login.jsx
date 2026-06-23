@@ -9,6 +9,8 @@ export default function Login() {
     email: "client@quickhire.com",
     password: "123456",
   });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -16,46 +18,21 @@ export default function Login() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-
-    const email = form.email.trim().toLowerCase();
-    const password = form.password.trim();
-
-    // 1) Default built-in client account
-    if (email === "client@quickhire.com" && password === "123456") {
-      localStorage.setItem("token", "demo-token");
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          name: "QuickHire Talent Hub",
-          email: "client@quickhire.com",
-          role: "CLIENT",
-        })
-      );
+    setError("");
+    setLoading(true);
+    try {
+      const data = await loginUser({
+        email: form.email.trim(),
+        password: form.password,
+      });
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
       navigate("/dashboard");
-      return;
+    } catch (err) {
+      setError("Invalid login details. (If the server was asleep, wait ~30s and try again.)");
+    } finally {
+      setLoading(false);
     }
-
-    // 2) NEW: accounts created through the Register page
-    const accounts = JSON.parse(localStorage.getItem("accounts") || "[]");
-    const match = accounts.find(
-      (a) => a.email.toLowerCase() === email && a.password === password
-    );
-
-    if (match) {
-      localStorage.setItem("token", "demo-token");
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          name: match.name,
-          email: match.email,
-          role: match.role || "FREELANCER",
-        })
-      );
-      navigate("/dashboard");
-      return;
-    }
-
-    alert("Invalid login details");
   }
 
   return (
@@ -89,8 +66,10 @@ export default function Login() {
             required
           />
 
-          <button className="authBtn" type="submit">
-            Login
+          {error && <p style={{ color: "crimson", margin: 0 }}>{error}</p>}
+
+          <button className="authBtn" type="submit" disabled={loading}>
+            {loading ? "Signing in..." : "Login"}
           </button>
         </form>
 

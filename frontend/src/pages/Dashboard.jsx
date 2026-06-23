@@ -5,29 +5,18 @@ const API_URL = "https://quickhire-backend-5jdz.onrender.com/api";
 export default function Dashboard() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-  // Pull the skills/location the user saved on their Profile page
-  const profile = JSON.parse(
-    localStorage.getItem(`profile:${user.email || "guest"}`) || "null"
-  );
-  const skills = profile && profile.skills ? profile.skills : "React, CSS, HTML";
-  const location = profile && profile.location ? profile.location : "";
+  // Skills/location from the user's Profile page (for matching)
+  const profile = JSON.parse(localStorage.getItem(`profile:${user.email || "guest"}`) || "null");
+  const skills = profile && profile.skills ? profile.skills : (user.skills || "React, CSS, HTML");
+  const location = profile && profile.location ? profile.location : (user.location || "");
 
-  // Live gig count
   const [taskCount, setTaskCount] = useState(null);
+  const [apps, setApps] = useState([]);
 
-  // Real application data from localStorage
-  const apps = JSON.parse(localStorage.getItem("applications") || "[]");
-  const pending = apps.filter((a) => a.status === "pending").length;
-  const accepted = apps.filter((a) => a.status === "accepted");
-  const earnings = accepted.reduce((sum, a) => {
-    const n = parseInt(String(a.budget).replace(/[^0-9]/g, ""), 10);
-    return sum + (isNaN(n) ? 0 : n);
-  }, 0);
-
-  // Recommendations from the matching engine
   const [recs, setRecs] = useState([]);
   const [recState, setRecState] = useState("loading"); // loading | done | error
 
+  // live gig count
   useEffect(() => {
     let active = true;
     fetch(`${API_URL}/tasks`)
@@ -37,28 +26,35 @@ export default function Dashboard() {
     return () => { active = false; };
   }, []);
 
+  // applications from the database
+  useEffect(() => {
+    let active = true;
+    fetch(`${API_URL}/applications`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => { if (active) setApps(Array.isArray(d) ? d : []); })
+      .catch(() => { if (active) setApps([]); });
+    return () => { active = false; };
+  }, []);
+
+  // recommendations from the matching engine
   useEffect(() => {
     let active = true;
     setRecState("loading");
     fetch(`${API_URL}/recommendations/generate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        freelancerName: user.name || "Guest",
-        skills,
-        location,
-      }),
+      body: JSON.stringify({ freelancerName: user.name || "Guest", skills, location }),
     })
       .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((data) => {
-        if (!active) return;
-        setRecs(Array.isArray(data) ? data : []);
-        setRecState("done");
-      })
+      .then((data) => { if (active) { setRecs(Array.isArray(data) ? data : []); setRecState("done"); } })
       .catch(() => { if (active) setRecState("error"); });
     return () => { active = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const pending = apps.filter((a) => a.status === "pending").length;
+  const accepted = apps.filter((a) => a.status === "accepted");
+  const earnings = accepted.reduce((sum, a) => sum + (a.task && a.task.hourlyRate ? a.task.hourlyRate : 0), 0);
 
   return (
     <div className="dashPage">
@@ -66,9 +62,7 @@ export default function Dashboard() {
         <div>
           <p className="label">Control center</p>
           <h1>Welcome back, {user.name || "Mustafa Hamdan"}</h1>
-          <p>
-            Monitor gig activity, earnings, profile strength, and smart recommendations.
-          </p>
+          <p>Monitor gig activity, earnings, profile strength, and smart recommendations.</p>
         </div>
 
         <div className="dashHeroCard">
@@ -98,9 +92,9 @@ export default function Dashboard() {
         </div>
 
         <div className="dashStat">
-          <span>Earnings</span>
-          <strong>&euro;{earnings.toLocaleString()}</strong>
-          <small>from accepted gigs</small>
+          <span>Est. Value</span>
+          <strong>€{earnings.toLocaleString()}</strong>
+          <small>hourly rate of accepted gigs</small>
         </div>
       </div>
 
@@ -118,41 +112,31 @@ export default function Dashboard() {
           <div className="recommendationList">
             {recState === "loading" && (
               <div className="recommendationItem">
-                <div>
-                  <h3>Matching gigs to your skills…</h3>
-                  <p>This can take a moment if the server was asleep.</p>
-                </div>
+                <div><h3>Matching gigs to your skills…</h3><p>This can take a moment if the server was asleep.</p></div>
               </div>
             )}
 
             {recState === "error" && (
               <div className="recommendationItem">
-                <div>
-                  <h3>Couldn’t reach the matching service</h3>
-                  <p>The backend may be waking up — refresh in a moment.</p>
-                </div>
+                <div><h3>Couldn’t reach the matching service</h3><p>The backend may be waking up — refresh in a moment.</p></div>
               </div>
             )}
 
             {recState === "done" && recs.length === 0 && (
               <div className="recommendationItem">
-                <div>
-                  <h3>No gigs to match yet</h3>
-                  <p>Post a gig, then refresh to see matches.</p>
-                </div>
+                <div><h3>No gigs to match yet</h3><p>Post a gig, then refresh to see matches.</p></div>
               </div>
             )}
 
-            {recState === "done" &&
-              recs.map((rec) => (
-                <div className="recommendationItem" key={rec.id}>
-                  <div>
-                    <h3>{rec.task ? rec.task.title : "Gig"}</h3>
-                    <p>{rec.reason}</p>
-                  </div>
-                  <strong>{rec.score}%</strong>
+            {recState === "done" && recs.map((rec) => (
+              <div className="recommendationItem" key={rec.id}>
+                <div>
+                  <h3>{rec.task ? rec.task.title : "Gig"}</h3>
+                  <p>{rec.reason}</p>
                 </div>
-              ))}
+                <strong>{rec.score}%</strong>
+              </div>
+            ))}
           </div>
         </section>
 

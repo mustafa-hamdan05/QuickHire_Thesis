@@ -11,6 +11,8 @@ export default function Register() {
     password: "",
     role: "FREELANCER",
   });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -18,32 +20,17 @@ export default function Register() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-
+    setError("");
+    setLoading(true);
     try {
       const data = await registerUser(form);
-
-      // NEW: remember this account so the user can log in again later
-      const accounts = JSON.parse(localStorage.getItem("accounts") || "[]");
-      const email = form.email.trim().toLowerCase();
-      const exists = accounts.some((a) => a.email.toLowerCase() === email);
-
-      if (!exists) {
-        accounts.push({
-          name: form.name.trim(),
-          email: form.email.trim(),
-          password: form.password,
-          role: form.role,
-        });
-        localStorage.setItem("accounts", JSON.stringify(accounts));
-      }
-
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-
-      navigate("/tasks");
+      navigate("/dashboard");
     } catch (err) {
-      alert("Registration failed");
-      console.error(err);
+      setError(err.message || "Registration failed");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -92,8 +79,10 @@ export default function Register() {
             <option value="CLIENT">Client</option>
           </select>
 
-          <button className="authBtn" type="submit">
-            Create Account
+          {error && <p style={{ color: "crimson", margin: 0 }}>{error}</p>}
+
+          <button className="authBtn" type="submit" disabled={loading}>
+            {loading ? "Creating..." : "Create Account"}
           </button>
         </form>
 

@@ -1,14 +1,20 @@
 package com.gigflow.config;
 
-import com.gigflow.model.Role;
-import com.gigflow.model.Task;
-import com.gigflow.model.User;
+import com.gigflow.model.*;
 import com.gigflow.repository.TaskRepository;
 import com.gigflow.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * Seeds the default client, a few freelancers, and starter gigs on startup
+ * (only when missing). This keeps the app populated even after Render wipes
+ * the H2 file on a restart/redeploy. Default password for all seeded users: 123456
+ */
 @Component
 public class DataSeeder implements CommandLineRunner {
 
@@ -16,9 +22,7 @@ public class DataSeeder implements CommandLineRunner {
     private final TaskRepository tasks;
     private final PasswordEncoder encoder;
 
-    public DataSeeder(UserRepository users,
-                      TaskRepository tasks,
-                      PasswordEncoder encoder) {
+    public DataSeeder(UserRepository users, TaskRepository tasks, PasswordEncoder encoder) {
         this.users = users;
         this.tasks = tasks;
         this.encoder = encoder;
@@ -26,179 +30,57 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        User client = users.findByEmail("client@quickhire.com").orElse(null);
 
-        User client;
+        if (client == null) {
+            client = users.save(User.builder()
+                    .name("QuickHire Talent Hub")
+                    .email("client@quickhire.com")
+                    .password(encoder.encode("123456"))
+                    .role(Role.CLIENT)
+                    .bio("Official QuickHire client account.")
+                    .skills("")
+                    .availability("Available")
+                    .location("Budapest")
+                    .rating(5.0)
+                    .build());
 
-        if (users.findByEmail("client@quickhire.com").isPresent()) {
-            client = users.findByEmail("client@quickhire.com").get();
-        } else {
-            User newClient = new User();
-
-            newClient.setName("QuickHire Talent Hub");
-            newClient.setEmail("client@quickhire.com");
-            newClient.setPassword(encoder.encode("123456"));
-            newClient.setRole(Role.CLIENT);
-            newClient.setBio("Hiring manager");
-            newClient.setLocation("Budapest");
-            newClient.setRating(4.8);
-
-            client = users.save(newClient);
+            users.save(freelancer("Sara Ahmed", "sara@quickhire.com",
+                    "Frontend developer who builds clean React UIs.", "React, CSS, JavaScript, HTML", "Budapest", 4.9));
+            users.save(freelancer("Adam Nagy", "adam@quickhire.com",
+                    "Backend assistant for APIs and databases.", "Java, Spring Boot, SQL, APIs", "Budapest", 4.6));
+            users.save(freelancer("Leila Omar", "leila@quickhire.com",
+                    "UI designer for clean modern interfaces.", "Figma, UI Design, Canva, UX", "Remote", 4.8));
+            users.save(freelancer("Daniel Kovacs", "daniel@quickhire.com",
+                    "Reliable event and hospitality support.", "Communication, Events, Customer Service", "Debrecen", 4.7));
         }
 
         if (tasks.count() == 0) {
-
-            createTask(
-                    "Frontend Website Assistant",
-                    "Help improve a company landing page using React and CSS.",
-                    "Web Development",
-                    "React, CSS, HTML",
-                    "Budapest",
-                    22,
-                    client
+            final User owner = client;
+            List<Task> seed = List.of(
+                    task(owner, "Frontend Website Assistant", "Help improve a company landing page using React and CSS.", "Web Development", "React, CSS, HTML", "Budapest", 22.0),
+                    task(owner, "Backend API Support", "Assist with REST API testing and small backend fixes.", "Web Development", "Java, Spring Boot, APIs", "Remote", 26.0),
+                    task(owner, "Event Registration Staff", "Support check-in and guest registration for a business event.", "Event Staff", "Communication, Organization", "Debrecen", 15.0),
+                    task(owner, "Hotel Reception Support", "Part-time reception support for check-ins and guest communication.", "Hospitality", "English, Communication, Hospitality", "Budapest", 19.0),
+                    task(owner, "Social Media Assistant", "Create short posts and schedule content for a small business.", "Marketing", "Social Media, Writing, Canva", "Remote", 21.0),
+                    task(owner, "UI Design Assistant", "Help redesign dashboard cards and page layouts.", "Design", "UI Design, Figma, UX", "Remote", 24.0),
+                    task(owner, "Warehouse Packing Assistant", "Help organize, pack, and label products in a warehouse.", "Logistics", "Warehouse, Packing, Reliability", "Debrecen", 16.0)
             );
-
-            createTask(
-                    "Event Registration Support",
-                    "Assist with guest check-ins and registration tasks.",
-                    "Event Staff",
-                    "Communication, Organization",
-                    "Budapest",
-                    18,
-                    client
-            );
-
-            createTask(
-                    "Mobile App Tester",
-                    "Test Android application features and report bugs.",
-                    "Web Development",
-                    "Android, Testing",
-                    "Debrecen",
-                    20,
-                    client
-            );
-
-            createTask(
-                    "Logo and Branding Designer",
-                    "Design logos and social media branding kits.",
-                    "Design",
-                    "Photoshop, Illustrator",
-                    "Szeged",
-                    25,
-                    client
-            );
-
-            createTask(
-                    "Social Media Content Creator",
-                    "Create Instagram and TikTok promotional content.",
-                    "Marketing",
-                    "Marketing, Canva",
-                    "Budapest",
-                    19,
-                    client
-            );
-
-            createTask(
-                    "Data Entry Assistant",
-                    "Organize and update spreadsheet information.",
-                    "Logistics",
-                    "Excel, Attention to detail",
-                    "Miskolc",
-                    16,
-                    client
-            );
-
-            createTask(
-                    "Photography Assistant",
-                    "Assist photographer during event shoots.",
-                    "Design",
-                    "Photography",
-                    "Győr",
-                    21,
-                    client
-            );
-
-            createTask(
-                    "Restaurant Shift Helper",
-                    "Support restaurant staff during busy hours.",
-                    "Hospitality",
-                    "Customer Service",
-                    "Budapest",
-                    17,
-                    client
-            );
-
-            createTask(
-                    "Backend API Helper",
-                    "Assist with REST API testing and backend fixes.",
-                    "Web Development",
-                    "Java, Spring Boot",
-                    "Budapest",
-                    26,
-                    client
-            );
-
-            createTask(
-                    "Translation Assistant",
-                    "Translate short documents between English and Hungarian.",
-                    "Marketing",
-                    "Translation",
-                    "Pécs",
-                    20,
-                    client
-            );
-
-            createTask(
-                    "University Event Promoter",
-                    "Promote upcoming university events online.",
-                    "Marketing",
-                    "Marketing",
-                    "Budapest",
-                    15,
-                    client
-            );
-
-            createTask(
-                    "Video Editing Assistant",
-                    "Edit short promotional videos for social media.",
-                    "Design",
-                    "Premiere Pro, Editing",
-                    "Szeged",
-                    24,
-                    client
-            );
-
-            createTask(
-                    "Customer Support Freelance",
-                    "Respond to customer support tickets remotely.",
-                    "Hospitality",
-                    "Communication",
-                    "Remote",
-                    23,
-                    client
-            );
+            tasks.saveAll(seed);
         }
     }
 
-    private void createTask(String title,
-                            String description,
-                            String category,
-                            String skills,
-                            String location,
-                            double rate,
-                            User client) {
+    private User freelancer(String name, String email, String bio, String skills, String location, double rating) {
+        return User.builder()
+                .name(name).email(email).password(encoder.encode("123456"))
+                .role(Role.FREELANCER).bio(bio).skills(skills)
+                .availability("Available").location(location).rating(rating).build();
+    }
 
-        Task task = new Task();
-
-        task.setTitle(title);
-        task.setDescription(description);
-        task.setCategory(category);
-        task.setRequiredSkills(skills);
-        task.setLocation(location);
-        task.setHourlyRate(rate);
-        task.setStatus("open");
-        task.setCreatedAt(java.time.LocalDateTime.now());
-        task.setClient(client);
-
-        tasks.save(task);
+    private Task task(User client, String title, String desc, String cat, String skills, String loc, double rate) {
+        return Task.builder()
+                .title(title).description(desc).category(cat).requiredSkills(skills)
+                .location(loc).hourlyRate(rate).status("OPEN").createdAt(LocalDateTime.now())
+                .client(client).build();
     }
 }
