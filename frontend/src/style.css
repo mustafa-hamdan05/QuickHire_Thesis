@@ -1278,24 +1278,7 @@ button {
   font-size: 30px;
   color: #cd2a3e;
 }
-  /* QUICKHIRE TEXT LOGO */
 
-  .navbar .quickhireTextLogo {
-    font-size: 34px;
-    font-weight: 900;
-    color: #cd2a3e;
-    letter-spacing: -1px;
-    text-decoration: none;
-    transition: all 0.25s ease;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-  }
-
-  .navbar .quickhireTextLogo:hover {
-    transform: scale(1.03);
-    color: #b91c1c;
-  }
 /* QUICKHIRE TEXT LOGO */
 
 .navbar .quickhireTextLogo {
@@ -1374,4 +1357,102 @@ button {
     margin-top: 20px;
   }
 
+}
+
+/* ============================================================
+   UI POLISH PASS — purely additive, safe to delete to revert.
+   No component or logic changes.
+   ============================================================ */
+
+html { scroll-behavior: smooth; }
+::selection { background: rgba(0, 132, 61, 0.18); }
+
+/* Cards lift gently on hover */
+.gigCardNew,
+.featureCard,
+.categoryCard,
+.testimonialCard,
+.freelancerCard,
+.profileCard,
+.dashStat,
+.applicationCard,
+.dashHeroCard,
+.applicationSummary > div {
+  transition: transform .22s ease, box-shadow .22s ease;
+}
+.gigCardNew:hover,
+.featureCard:hover,
+.categoryCard:hover,
+.testimonialCard:hover,
+.freelancerCard:hover,
+.profileCard:hover,
+.dashStat:hover,
+.applicationCard:hover,
+.dashHeroCard:hover,
+.applicationSummary > div:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 24px 55px rgba(23, 32, 51, 0.12);
+}
+
+/* Buttons get hover + press feedback */
+.mainBtn, .outlineBtn, .searchBtn, .authBtn, .fullBtn,
+.gigActions button, .appActions button,
+.loginBtn, .logoutBtn, .smallBtn, .outlineSmall {
+  transition: transform .15s ease, box-shadow .15s ease,
+              filter .15s ease, background .15s ease, color .15s ease;
+}
+.mainBtn:hover, .searchBtn:hover, .authBtn:hover, .fullBtn:hover,
+.gigActions button:hover, .appActions button:hover,
+.loginBtn:hover, .logoutBtn:hover, .smallBtn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.07);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.16);
+}
+.mainBtn:active, .searchBtn:active, .authBtn:active, .fullBtn:active,
+.gigActions button:active, .appActions button:active {
+  transform: translateY(0);
+  filter: brightness(0.98);
+  box-shadow: none;
+}
+/* Outline buttons invert on hover */
+.outlineBtn:hover, .outlineSmall:hover {
+  transform: translateY(-2px);
+  background: #0f172a !important;
+  color: #fff !important;
+}
+
+/* Visible focus ring on all fields (no layout shift) */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 132, 61, 0.35);
+}
+
+/* Subtle motion on dashboard list rows */
+.recommendationItem, .activityList p {
+  transition: transform .2s ease, background .2s ease;
+}
+.recommendationItem:hover, .activityList p:hover {
+  transform: translateX(4px);
+}
+
+/* Theme the Post a Gig form fields (only the block-layout page,
+   so the Tasks marketplace sidebar is untouched) */
+.marketplacePage[style*="block"] input,
+.marketplacePage[style*="block"] select,
+.marketplacePage[style*="block"] textarea {
+  width: 100%;
+  border: none;
+  background: #f5f7fb;
+  border-radius: 16px;
+  padding: 16px 18px;
+  font-size: 16px;
+  outline: none;
+}
+.marketplacePage[style*="block"] textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+.marketplacePage[style*="block"] label {
+  font-weight: 800;
+  margin-top: 4px;
 }
