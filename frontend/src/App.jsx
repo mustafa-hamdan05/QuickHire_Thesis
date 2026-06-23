@@ -263,7 +263,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-
+      <Route path="/post-gig" element={<Protected><><Navbar /><PostGig /></></Protected>} />
       <Route path="/login" element={<><Navbar /><Login /></>} />
       <Route path="/register" element={<><Navbar /><Register /></>} />
 
