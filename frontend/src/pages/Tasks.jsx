@@ -5,103 +5,104 @@ const API_URL = "https://quickhire-backend-5jdz.onrender.com/api";
 
 export default function Tasks() {
   const [params] = useSearchParams();
-    const [search, setSearch] = useState(params.get("search") || "");
-    const [category, setCategory] = useState(params.get("category") || "All");
-  const [dbTasks, setDbTasks] = useState([]);
-  const [details, setDetails] = useState(null); // NEW: which gig's details modal is open
+  const [search, setSearch] = useState(params.get("search") || "");
+  const [category, setCategory] = useState(params.get("category") || "All");
+
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [appliedIds, setAppliedIds] = useState(new Set());
+  const [details, setDetails] = useState(null);
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const isClient = user.role === "CLIENT";
 
-  // NEW: titles the user has already applied to (so we can show "Applied" and block duplicates)
-  const [appliedTitles, setAppliedTitles] = useState(() => {
-    const apps = JSON.parse(localStorage.getItem("applications") || "[]");
-    return new Set(apps.map((a) => a.task));
-  });
-
-  const demoTasks = [
-    { id: 1, title: "Frontend Website Assistant", description: "Help improve a company landing page using React and CSS.", category: "Web Development", budget: 220, location: "Budapest", deadline: "Today", skills: "React, CSS, HTML", matchScore: 94 },
-    { id: 2, title: "Backend API Support", description: "Assist with REST API testing and small backend fixes.", category: "Web Development", budget: 260, location: "Remote", deadline: "This week", skills: "Java, Spring Boot, APIs", matchScore: 91 },
-    { id: 3, title: "Website Bug Fixer", description: "Fix layout bugs and improve responsive design.", category: "Web Development", budget: 180, location: "Remote", deadline: "Tomorrow", skills: "JavaScript, CSS, Debugging", matchScore: 89 },
-    { id: 4, title: "Event Registration Staff", description: "Support check-in and guest registration for a business event.", category: "Event Staff", budget: 150, location: "Debrecen", deadline: "Tomorrow", skills: "Communication, Organization", matchScore: 87 },
-    { id: 5, title: "Conference Assistant", description: "Help guests, prepare badges, and guide attendees during a conference.", category: "Event Staff", budget: 170, location: "Budapest", deadline: "Friday", skills: "Events, English, Customer Service", matchScore: 85 },
-    { id: 6, title: "Catering Support Worker", description: "Assist catering team with serving and preparation during an event.", category: "Hospitality", budget: 135, location: "Szeged", deadline: "Weekend", skills: "Hospitality, Teamwork, Service", matchScore: 83 },
-    { id: 7, title: "Hotel Reception Support", description: "Part-time reception support for check-ins and guest communication.", category: "Hospitality", budget: 190, location: "Budapest", deadline: "Next week", skills: "English, Communication, Hospitality", matchScore: 90 },
-    { id: 8, title: "Warehouse Packing Assistant", description: "Help organize, pack, and label products in a warehouse.", category: "Logistics", budget: 160, location: "Debrecen", deadline: "Today", skills: "Warehouse, Packing, Reliability", matchScore: 82 },
-    { id: 9, title: "Delivery Helper", description: "Assist with local deliveries and package handling.", category: "Logistics", budget: 145, location: "Budapest", deadline: "Tomorrow", skills: "Delivery, Time Management, Physical Work", matchScore: 80 },
-    { id: 10, title: "Social Media Assistant", description: "Create short posts and schedule content for a small business.", category: "Marketing", budget: 210, location: "Remote", deadline: "This week", skills: "Social Media, Writing, Canva", matchScore: 88 },
-    { id: 11, title: "Brand Promotion Staff", description: "Promote a local product at a student event.", category: "Marketing", budget: 155, location: "Debrecen", deadline: "Saturday", skills: "Marketing, Communication, Sales", matchScore: 84 },
-    { id: 12, title: "Poster Designer", description: "Design a clean promotional poster for an upcoming event.", category: "Design", budget: 120, location: "Remote", deadline: "3 days", skills: "Design, Canva, Creativity", matchScore: 86 },
-    { id: 13, title: "UI Design Assistant", description: "Help redesign dashboard cards and page layouts.", category: "Design", budget: 240, location: "Remote", deadline: "Next week", skills: "UI Design, Figma, UX", matchScore: 92 },
-  ];
-
+  // Load gigs from the database
   useEffect(() => {
     let active = true;
     fetch(`${API_URL}/tasks`)
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => {
-        if (!active) return;
-        const mapped = (Array.isArray(data) ? data : []).map((t) => ({
-          id: `db-${t.id}`,
-          title: t.title,
-          description: t.description,
-          category: t.category || "Other",
-          budget: t.hourlyRate ?? 0,
-          location: t.location || "Remote",
-          deadline: "Open",
-          skills: t.requiredSkills || "",
-          matchScore: null,
-        }));
-        setDbTasks(mapped);
-      })
-      .catch(() => {
-        // backend asleep or CORS not deployed yet — keep demo gigs only
-      });
-    return () => {
-      active = false;
-    };
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => { if (active) setTasks(Array.isArray(d) ? d : []); })
+      .catch(() => { if (active) setTasks([]); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, []);
 
-  const allTasks = [...dbTasks, ...demoTasks];
+  // Mark gigs the logged-in user already applied to (safe matching)
+  function refreshApplied() {
+    const email = (user.email || "").toLowerCase();
+    if (!email) return;
+    fetch(`${API_URL}/applications`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((list) => {
+        const ids = (Array.isArray(list) ? list : [])
+          .filter((a) => a.freelancer && (a.freelancer.email || "").toLowerCase() === email)
+          .map((a) => (a.task ? a.task.id : null))
+          .filter((id) => id != null);
+        setAppliedIds(new Set(ids));
+      })
+      .catch(() => {});
+  }
 
-  function handleApply(taskId) {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("You must login first.");
+  useEffect(() => {
+    refreshApplied();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.email]);
+
+  async function handleApply(task) {
+    if (isClient) {
+      alert("You're signed in as a client. Log in as a freelancer to apply to gigs.");
       return;
     }
-    const selectedTask = allTasks.find((task) => task.id === taskId);
-    if (!selectedTask) return;
-
-    // NEW: block duplicate applications
-    if (appliedTitles.has(selectedTask.title)) {
+    const token = localStorage.getItem("token");
+    if (!token || !user.email) {
+      alert("Please log in as a freelancer to apply.");
+      return;
+    }
+    if (appliedIds.has(task.id)) {
       alert("You already applied to this gig.");
       return;
     }
-
-    const existingApplications = JSON.parse(localStorage.getItem("applications") || "[]");
-    const newApplication = {
-      id: Date.now(),
-      task: selectedTask.title,
-      freelancer: JSON.parse(localStorage.getItem("user") || "{}").name || "QuickHire User",
-      role: "Applicant",
-      message: "I am interested in this opportunity.",
-      status: "pending",
-      score: selectedTask.matchScore, // may be null for real DB gigs — handled on the Applications page
-      budget: `€${selectedTask.budget}`,
-    };
-    localStorage.setItem("applications", JSON.stringify([...existingApplications, newApplication]));
-
-    // NEW: update applied state so the button flips to "Applied"
-    setAppliedTitles((prev) => new Set(prev).add(selectedTask.title));
-    alert("Application submitted successfully!");
+    try {
+      const res = await fetch(`${API_URL}/applications`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          taskId: task.id,
+          freelancerEmail: user.email,
+          message: "I am interested in this opportunity.",
+        }),
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Request failed (${res.status})`);
+      }
+      setAppliedIds((prev) => new Set(prev).add(task.id));
+      alert("Application submitted successfully!");
+    } catch (e) {
+      alert("Could not submit the application: " + (e.message || "unknown error"));
+    }
   }
 
-  const filteredTasks = allTasks.filter((task) => {
-    const text = `${task.title} ${task.description} ${task.skills} ${task.location}`.toLowerCase();
-    const matchesSearch = text.includes(search.toLowerCase());
-    const matchesCategory = category === "All" || task.category === category;
-    return matchesSearch && matchesCategory;
+  const filtered = tasks.filter((t) => {
+    const text = `${t.title} ${t.description} ${t.requiredSkills} ${t.location}`.toLowerCase();
+    const okSearch = text.includes(search.toLowerCase());
+    const okCat = category === "All" || t.category === category;
+    return okSearch && okCat;
   });
+
+  function ApplyButton({ task }) {
+    if (isClient) return null; // clients don't apply
+    const isApplied = appliedIds.has(task.id);
+    return (
+      <button
+        onClick={() => handleApply(task)}
+        disabled={isApplied}
+        style={isApplied ? { background: "#94a3b8", cursor: "default" } : undefined}
+      >
+        {isApplied ? "Applied ✓" : "Apply Now"}
+      </button>
+    );
+  }
 
   return (
     <div className="marketplacePage">
@@ -141,106 +142,74 @@ export default function Tasks() {
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {user.role === "CLIENT" && (
+            {isClient && (
               <Link to="/post-gig" className="mainBtn">+ Post a Gig</Link>
             )}
-            <span>{filteredTasks.length} results</span>
+            <span>{filtered.length} results</span>
           </div>
         </div>
 
         <div className="gigList">
-          {filteredTasks.map((task) => {
-            const isApplied = appliedTitles.has(task.title);
-            return (
-              <div className="gigCardNew" key={task.id}>
-                <div className="gigTop">
-                  <div>
-                    <span className="gigCategory">{task.category}</span>
-                    <h3>{task.title}</h3>
-                    <p>{task.description}</p>
-                  </div>
+          {loading && (
+            <div className="gigCardNew"><h3>Loading gigs…</h3><p>The server may take a moment if it was asleep.</p></div>
+          )}
 
-                  <div className="gigPay">
-                    <strong>€{task.budget}</strong>
-                    <span>budget</span>
-                  </div>
+          {!loading && filtered.length === 0 && (
+            <div className="gigCardNew"><h3>No gigs found</h3><p>Try a different search or category.</p></div>
+          )}
+
+          {!loading && filtered.map((task) => (
+            <div className="gigCardNew" key={task.id}>
+              <div className="gigTop">
+                <div>
+                  <span className="gigCategory">{task.category}</span>
+                  <h3>{task.title}</h3>
+                  <p>{task.description}</p>
                 </div>
 
-                <div className="gigMeta">
-                  <span>📍 {task.location}</span>
-                  <span>🕒 {task.deadline}</span>
-                  {task.matchScore != null && <span>⭐ Match score: {task.matchScore}%</span>}
-                </div>
-
-                <div className="skillRow">
-                  {(task.skills || "")
-                    .split(",")
-                    .filter((s) => s.trim())
-                    .map((skill, index) => (
-                      <span key={index}>{skill.trim()}</span>
-                    ))}
-                </div>
-
-                <div className="gigActions">
-                  <button
-                    onClick={() => handleApply(task.id)}
-                    disabled={isApplied}
-                    style={isApplied ? { background: "#94a3b8", cursor: "default" } : undefined}
-                  >
-                    {isApplied ? "Applied ✓" : "Apply Now"}
-                  </button>
-                  <button className="outlineSmall" onClick={() => setDetails(task)}>
-                    View Details
-                  </button>
+                <div className="gigPay">
+                  <strong>€{task.hourlyRate}</strong>
+                  <span>per hour</span>
                 </div>
               </div>
-            );
-          })}
+
+              <div className="gigMeta">
+                <span>📍 {task.location}</span>
+                <span>🕒 {task.status || "Open"}</span>
+              </div>
+
+              <div className="skillRow">
+                {(task.requiredSkills || "")
+                  .split(",")
+                  .filter((s) => s.trim())
+                  .map((skill, index) => (
+                    <span key={index}>{skill.trim()}</span>
+                  ))}
+              </div>
+
+              <div className="gigActions">
+                <ApplyButton task={task} />
+                <button className="outlineSmall" onClick={() => setDetails(task)}>
+                  View Details
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       </main>
 
-      {/* NEW: gig details modal */}
       {details && (
         <div
           onClick={() => setDetails(null)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(15, 23, 42, 0.55)",
-            display: "grid",
-            placeItems: "center",
-            zIndex: 200,
-            padding: 20,
-          }}
+          style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.55)", display: "grid", placeItems: "center", zIndex: 200, padding: 20 }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{
-              background: "white",
-              borderRadius: 28,
-              padding: 36,
-              maxWidth: 560,
-              width: "100%",
-              position: "relative",
-              boxShadow: "0 30px 70px rgba(0,0,0,0.25)",
-            }}
+            style={{ background: "white", borderRadius: 28, padding: 36, maxWidth: 560, width: "100%", position: "relative", boxShadow: "0 30px 70px rgba(0,0,0,0.25)" }}
           >
             <button
               onClick={() => setDetails(null)}
-              style={{
-                position: "absolute",
-                top: 18,
-                right: 18,
-                border: "none",
-                background: "#f5f7fb",
-                borderRadius: 12,
-                width: 40,
-                height: 40,
-                fontSize: 20,
-                fontWeight: 900,
-                cursor: "pointer",
-                color: "#0f172a",
-              }}
+              style={{ position: "absolute", top: 18, right: 18, border: "none", background: "#f5f7fb", borderRadius: 12, width: 40, height: 40, fontSize: 20, fontWeight: 900, cursor: "pointer", color: "#0f172a" }}
               aria-label="Close"
             >
               ×
@@ -252,14 +221,13 @@ export default function Tasks() {
 
             <div className="gigMeta" style={{ marginTop: 20 }}>
               <span>📍 {details.location}</span>
-              <span>🕒 {details.deadline}</span>
-              <span>💶 €{details.budget} budget</span>
-              {details.matchScore != null && <span>⭐ {details.matchScore}% match</span>}
+              <span>💶 €{details.hourlyRate}/hr</span>
+              <span>🕒 {details.status || "Open"}</span>
             </div>
 
             <div style={{ margin: "20px 0 8px", fontWeight: 800 }}>Required skills</div>
             <div className="skillRow">
-              {(details.skills || "")
+              {(details.requiredSkills || "")
                 .split(",")
                 .filter((s) => s.trim())
                 .map((skill, index) => (
@@ -268,23 +236,16 @@ export default function Tasks() {
             </div>
 
             <div className="gigActions" style={{ marginTop: 26 }}>
-              <button
-                onClick={() => {
-                  handleApply(details.id);
-                  setDetails(null);
-                }}
-                disabled={appliedTitles.has(details.title)}
-                style={
-                  appliedTitles.has(details.title)
-                    ? { background: "#94a3b8", cursor: "default" }
-                    : undefined
-                }
-              >
-                {appliedTitles.has(details.title) ? "Applied ✓" : "Apply Now"}
-              </button>
-              <button className="outlineSmall" onClick={() => setDetails(null)}>
-                Close
-              </button>
+              {!isClient && (
+                <button
+                  onClick={() => { handleApply(details); setDetails(null); }}
+                  disabled={appliedIds.has(details.id)}
+                  style={appliedIds.has(details.id) ? { background: "#94a3b8", cursor: "default" } : undefined}
+                >
+                  {appliedIds.has(details.id) ? "Applied ✓" : "Apply Now"}
+                </button>
+              )}
+              <button className="outlineSmall" onClick={() => setDetails(null)}>Close</button>
             </div>
           </div>
         </div>
