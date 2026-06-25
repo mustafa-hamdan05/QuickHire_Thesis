@@ -1633,3 +1633,7 @@ a.categoryCard { color: inherit; text-decoration: none; }
   .profileStats { grid-template-columns:1fr 1fr; }
   .profileHeroActions { margin-left:0; width:100%; }
 }
+/* Space the View Profile link-button away from the skill tags */
+.freelancerCard .fullBtn {
+  margin-top: 18px;
+}
