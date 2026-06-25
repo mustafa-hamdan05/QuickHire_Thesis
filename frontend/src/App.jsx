@@ -156,33 +156,34 @@ function HomePage() {
         <div className="statItem"><strong>{avgRating}★</strong><span>Avg rating</span></div>
       </section>
 
-      <section className="infoSection reveal">
-        <div className="infoText">
-          <p className="label redText">Why QuickHire?</p>
-          <h2>A smarter way to manage short-term freelance work.</h2>
-          <p>
-            Businesses post tasks in seconds, while freelancers receive suitable
-            opportunities based on their profile, skills, and availability.
-          </p>
-        </div>
+      <section className="howSection reveal" style={{ padding: "100px 7%", background: "white" }}>
+              <p className="label redText">Why QuickHire &amp; how it works</p>
+              <h2 style={{ fontSize: 56, margin: "12px 0 14px", maxWidth: 760 }}>
+                A smarter way to manage short-term freelance work.
+              </h2>
+              <p style={{ fontSize: 20, color: "#596174", maxWidth: 760, lineHeight: 1.7 }}>
+                Businesses post tasks in seconds; freelancers get matched to the right
+                gigs by skills, location, and availability.
+              </p>
 
-        <div className="featureCards">
-          <div className="featureCard"><span>01</span><h3>Smart Matching</h3><p>Rank gigs using skills, location, and task requirements.</p></div>
-          <div className="featureCard"><span>02</span><h3>Applications</h3><p>Freelancers apply in one click and clients accept or reject.</p></div>
-          <div className="featureCard"><span>03</span><h3>Dashboard</h3><p>Track gigs, applications, and AI recommendations live.</p></div>
-        </div>
-      </section>
-
-      <section className="howSection reveal" style={{ padding: "90px 7%", background: "white" }}>
-        <p className="label">Simple process</p>
-        <h2 style={{ fontSize: 56, margin: "12px 0 10px" }}>How it works</h2>
-
-        <div className="howSteps">
-          <div className="howStep"><div className="stepNum">1</div><h3>Post or browse</h3><p>Clients post a gig in seconds; freelancers browse the live marketplace.</p></div>
-          <div className="howStep"><div className="stepNum">2</div><h3>Smart match</h3><p>Our engine scores each gig against a freelancer's skills and location.</p></div>
-          <div className="howStep"><div className="stepNum">3</div><h3>Apply &amp; hire</h3><p>Freelancers apply with one click; clients accept the best fit.</p></div>
-        </div>
-      </section>
+              <div className="howSteps">
+                <div className="howStep">
+                  <div className="stepNum">1</div>
+                  <h3>Post or browse</h3>
+                  <p>Clients post a gig in seconds; freelancers browse the live marketplace.</p>
+                </div>
+                <div className="howStep">
+                  <div className="stepNum">2</div>
+                  <h3>Smart match</h3>
+                  <p>Our engine scores every gig against a freelancer's skills and location.</p>
+                </div>
+                <div className="howStep">
+                  <div className="stepNum">3</div>
+                  <h3>Apply &amp; track</h3>
+                  <p>Apply in one click, then track applications and AI recommendations on your dashboard.</p>
+                </div>
+              </div>
+            </section>
 
       <section className="categorySection reveal">
         <p className="label">Job categories</p>
