@@ -13,73 +13,49 @@ import PostGig from "./pages/PostGig.jsx";
 
 const API_URL = "https://quickhire-backend-5jdz.onrender.com/api";
 
+const CATEGORIES = [
+  { title: "Web Development", icon: "💻" },
+  { title: "Marketing", icon: "📣" },
+  { title: "Hospitality", icon: "🛎️" },
+  { title: "Design", icon: "🎨" },
+  { title: "Event Staff", icon: "🎫" },
+  { title: "Logistics", icon: "📦" },
+];
+
 function HomePage() {
   const navigate = useNavigate();
 
-  // Hero search state
   const [heroCat, setHeroCat] = useState("All categories");
   const [heroQuery, setHeroQuery] = useState("");
 
-  // Live gig count for the hero badge
-  const [gigCount, setGigCount] = useState(null);
+  const [gigs, setGigs] = useState([]);
+  const [freelancers, setFreelancers] = useState([]);
 
-  const categories = [
-    { title: "Web Development", icon: "💻", jobs: ["Frontend Developer", "Backend Assistant", "Website Fixer"] },
-    { title: "Hospitality", icon: "🛎️", jobs: ["Waiter", "Catering Assistant", "Hotel Support"] },
-    { title: "Logistics", icon: "📦", jobs: ["Warehouse Assistant", "Mover", "Delivery Helper"] },
-    { title: "Marketing", icon: "📣", jobs: ["Social Media Assistant", "Content Creator", "Brand Promoter"] },
-    { title: "Design", icon: "🎨", jobs: ["Graphic Designer", "UI Assistant", "Poster Designer"] }
-  ];
-
-  const testimonials = [
-    {
-      text: "QuickHire helped me find flexible freelance work while studying. I can choose tasks that fit my schedule.",
-      name: "Sara Ahmed",
-      role: "Frontend Freelancer"
-    },
-    {
-      text: "The matching system makes it easier to find suitable workers quickly instead of searching manually.",
-      name: "Daniel Kovacs",
-      role: "Client Manager"
-    },
-    {
-      text: "I like seeing match scores, skills, and availability before applying. It makes the process much faster.",
-      name: "Mira Hassan",
-      role: "Support Specialist"
-    }
-  ];
-
-  // Live gig count (falls back to a static number if the backend is asleep)
   useEffect(() => {
     let active = true;
     fetch(`${API_URL}/tasks`)
       .then((r) => (r.ok ? r.json() : []))
-      .then((d) => { if (active) setGigCount(Array.isArray(d) ? d.length : 0); })
-      .catch(() => { if (active) setGigCount(null); });
+      .then((d) => { if (active) setGigs(Array.isArray(d) ? d : []); })
+      .catch(() => {});
+    fetch(`${API_URL}/users/freelancers`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => { if (active) setFreelancers(Array.isArray(d) ? d : []); })
+      .catch(() => {});
     return () => { active = false; };
   }, []);
 
-  // Scroll fade-in. .reveal-init is added by JS only, so if JS fails the
-  // content stays fully visible (never stuck hidden). useLayoutEffect avoids a flash.
   useLayoutEffect(() => {
     const els = Array.from(document.querySelectorAll(".reveal"));
     els.forEach((el) => el.classList.add("reveal-init"));
-
     const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            e.target.classList.add("reveal-show");
-            obs.unobserve(e.target);
-          }
-        });
-      },
+      (entries) => entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add("reveal-show"); obs.unobserve(e.target); }
+      }),
       { threshold: 0.12 }
     );
-
     els.forEach((el) => obs.observe(el));
     return () => obs.disconnect();
-  }, []);
+  });
 
   function findGigs() {
     const sp = new URLSearchParams();
@@ -88,6 +64,21 @@ function HomePage() {
     const qs = sp.toString();
     navigate(`/tasks${qs ? `?${qs}` : ""}`);
   }
+
+  const featuredGig = gigs[0];
+  const featuredFreelancers = freelancers.slice(0, 3);
+  const avgRating = freelancers.length
+    ? (freelancers.reduce((s, f) => s + (Number(f.rating) || 0), 0) / freelancers.length).toFixed(1)
+    : "—";
+
+  const countFor = (cat) => gigs.filter((g) => g.category === cat).length;
+  const skillsOf = (csv) => String(csv || "").split(",").map((s) => s.trim()).filter(Boolean);
+
+  const testimonials = [
+    { text: "QuickHire helped me find flexible freelance work while studying. I can choose tasks that fit my schedule.", name: "Sara Ahmed", role: "Frontend Freelancer" },
+    { text: "The matching system makes it easier to find suitable workers quickly instead of searching manually.", name: "Daniel Kovacs", role: "Client Manager" },
+    { text: "I like seeing match scores, skills, and availability before applying. It makes the process much faster.", name: "Mira Hassan", role: "Support Specialist" },
+  ];
 
   return (
     <>
@@ -110,30 +101,35 @@ function HomePage() {
         </div>
 
         <div className="heroRight">
-          {/* subtle Hungarian-flag accent blobs (styles already in your CSS) */}
           <span className="huStripe red"></span>
           <span className="huStripe white"></span>
           <span className="huStripe green"></span>
 
           <div className="dashboardPreview">
             <div className="previewTop">
-              <span>Recommended Gig</span>
-              <strong>94% Match</strong>
+              <span>Featured gig</span>
+              <strong>{featuredGig ? featuredGig.category : "QuickHire"}</strong>
             </div>
 
-            <h3>Frontend Website Assistant</h3>
-            <p>Budapest • Today • €22/hr</p>
+            <h3>{featuredGig ? featuredGig.title : "Find your next gig"}</h3>
+            <p>
+              {featuredGig
+                ? `${featuredGig.location} • €${featuredGig.hourlyRate}/hr`
+                : "Browse real gigs from local businesses"}
+            </p>
 
             <div className="miniStats">
-              <div><strong>React</strong><span>Skill</span></div>
-              <div><strong>4.8★</strong><span>Rating</span></div>
-              <div><strong>Now</strong><span>Available</span></div>
+              {(featuredGig ? skillsOf(featuredGig.requiredSkills).slice(0, 3) : ["React", "Design", "Support"]).map((s) => (
+                <div key={s}><strong style={{ fontSize: 18 }}>{s}</strong><span>Skill</span></div>
+              ))}
             </div>
+
+            <Link to="/tasks" className="mainBtn" style={{ marginTop: 22 }}>View gigs</Link>
           </div>
 
           <div className="smallPreview">
-            <strong>{gigCount == null ? "24" : gigCount} new gigs</strong>
-            <span>available this week</span>
+            <strong>{gigs.length || "—"} gigs</strong>
+            <span>available now</span>
           </div>
         </div>
       </section>
@@ -141,12 +137,7 @@ function HomePage() {
       <section className="searchPanel">
         <select value={heroCat} onChange={(e) => setHeroCat(e.target.value)}>
           <option>All categories</option>
-          <option>Web Development</option>
-          <option>Marketing</option>
-          <option>Hospitality</option>
-          <option>Design</option>
-          <option>Event Staff</option>
-          <option>Logistics</option>
+          {CATEGORIES.map((c) => <option key={c.title}>{c.title}</option>)}
         </select>
 
         <input
@@ -158,34 +149,38 @@ function HomePage() {
         <button className="searchBtn" onClick={findGigs}>Find Gigs</button>
       </section>
 
+      <section className="statsBand reveal">
+        <div className="statItem"><strong>{gigs.length || "—"}</strong><span>Open gigs</span></div>
+        <div className="statItem"><strong>{freelancers.length || "—"}</strong><span>Freelancers</span></div>
+        <div className="statItem"><strong>6</strong><span>Categories</span></div>
+        <div className="statItem"><strong>{avgRating}★</strong><span>Avg rating</span></div>
+      </section>
+
       <section className="infoSection reveal">
         <div className="infoText">
           <p className="label redText">Why QuickHire?</p>
           <h2>A smarter way to manage short-term freelance work.</h2>
           <p>
-            Businesses can post tasks quickly, while freelancers receive suitable
+            Businesses post tasks in seconds, while freelancers receive suitable
             opportunities based on their profile, skills, and availability.
           </p>
         </div>
 
         <div className="featureCards">
-          <div className="featureCard">
-            <span>01</span>
-            <h3>Smart Matching</h3>
-            <p>Rank workers using skills, availability, ratings, and task requirements.</p>
-          </div>
+          <div className="featureCard"><span>01</span><h3>Smart Matching</h3><p>Rank gigs using skills, location, and task requirements.</p></div>
+          <div className="featureCard"><span>02</span><h3>Applications</h3><p>Freelancers apply in one click and clients accept or reject.</p></div>
+          <div className="featureCard"><span>03</span><h3>Dashboard</h3><p>Track gigs, applications, and AI recommendations live.</p></div>
+        </div>
+      </section>
 
-          <div className="featureCard">
-            <span>02</span>
-            <h3>Applications</h3>
-            <p>Freelancers apply quickly and clients accept or reject applications.</p>
-          </div>
+      <section className="howSection reveal" style={{ padding: "90px 7%", background: "white" }}>
+        <p className="label">Simple process</p>
+        <h2 style={{ fontSize: 56, margin: "12px 0 10px" }}>How it works</h2>
 
-          <div className="featureCard">
-            <span>03</span>
-            <h3>Dashboard</h3>
-            <p>Track tasks, applications, performance, and recommendations.</p>
-          </div>
+        <div className="howSteps">
+          <div className="howStep"><div className="stepNum">1</div><h3>Post or browse</h3><p>Clients post a gig in seconds; freelancers browse the live marketplace.</p></div>
+          <div className="howStep"><div className="stepNum">2</div><h3>Smart match</h3><p>Our engine scores each gig against a freelancer's skills and location.</p></div>
+          <div className="howStep"><div className="stepNum">3</div><h3>Apply &amp; hire</h3><p>Freelancers apply with one click; clients accept the best fit.</p></div>
         </div>
       </section>
 
@@ -193,72 +188,51 @@ function HomePage() {
         <p className="label">Job categories</p>
         <h2>What is your next gig?</h2>
 
-        <div className="categoryGrid">
-          {categories.map((cat) => (
-            <div className="categoryCard" key={cat.title}>
+        <div className="categoryGrid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+          {CATEGORIES.map((cat) => (
+            <Link
+              to={`/tasks?category=${encodeURIComponent(cat.title)}`}
+              className="categoryCard"
+              key={cat.title}
+              style={{ display: "block" }}
+            >
               <div className="categoryIcon">{cat.icon}</div>
               <h3>{cat.title}</h3>
-              {cat.jobs.map((job) => (
-                <p key={job}>{job}</p>
-              ))}
-            </div>
+              <p style={{ color: "#00843d", fontWeight: 800 }}>{countFor(cat.title)} open gigs</p>
+            </Link>
           ))}
         </div>
       </section>
 
-      <section className="upgradeSection reveal">
-        <div className="upgradeCard">
-          <h2>Upgrade your profile and increase your chances.</h2>
-          <p>
-            Add skills, availability, completed work, and performance history to
-            improve your match score and receive better gig recommendations.
-          </p>
-
-          <div className="upgradeStats">
-            <span>✓ Build your profile</span>
-            <span>✓ Gain more skills</span>
-            <span>✓ Improve match score</span>
+      <section className="featuredSection reveal" style={{ padding: "90px 7%", background: "#f4f6fb" }}>
+        <div className="testimonialTop">
+          <div>
+            <p className="label">Talent pool</p>
+            <h2 style={{ fontSize: 56, margin: "12px 0 0" }}>Meet our freelancers</h2>
           </div>
-
-          <Link to="/profile" className="mainBtn">Improve Profile</Link>
+          <Link to="/freelancers" className="mainBtn">View all</Link>
         </div>
 
-        <div className="profilePreviewCard">
-          <h3>Lara Uys</h3>
-          <p>4.9★ rating • 98% on time • Verified profile</p>
-          <div className="skillRow">
-            <span>Web Design</span>
-            <span>Support</span>
-            <span>Delivery</span>
-          </div>
-        </div>
-      </section>
-
-      <section className="earningsSection reveal">
-        <div>
-          <h2>Maximise earnings, minimise uncertainty.</h2>
-          <p>
-            Freelancers can discover suitable work, negotiate rates, track
-            applications, and work with trusted clients through one platform.
-          </p>
-
-          <Link to="/register" className="mainBtn">Sign up now</Link>
-        </div>
-
-        <div className="earningsBox">
-          <h3>Example Shift</h3>
-          <div className="earningLine">
-            <span>Frontend Assistant</span>
-            <strong>€23/hr</strong>
-          </div>
-          <div className="earningLine">
-            <span>Event Support</span>
-            <strong>€18/hr</strong>
-          </div>
-          <div className="earningLine highlight">
-            <span>Best Match</span>
-            <strong>96%</strong>
-          </div>
+        <div className="freelancerGrid" style={{ marginTop: 35 }}>
+          {featuredFreelancers.length === 0 ? (
+            <p style={{ color: "#667085" }}>Loading freelancers…</p>
+          ) : (
+            featuredFreelancers.map((f) => (
+              <div className="freelancerCard" key={f.id}>
+                <div className="freelancerAvatar">{(f.name || "U").charAt(0)}</div>
+                <h2>{f.name}</h2>
+                <p className="roleText">{f.role}</p>
+                <p>{f.bio}</p>
+                <div className="freelancerMeta">
+                  <span>📍 {f.location || "—"}</span>
+                  <span>⭐ {f.rating != null ? f.rating : "—"}</span>
+                </div>
+                <div className="skillRow">
+                  {skillsOf(f.skills).slice(0, 4).map((s) => <span key={s}>{s}</span>)}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </section>
 
@@ -272,10 +246,7 @@ function HomePage() {
           {testimonials.map((item) => (
             <div className="testimonialCard" key={item.name}>
               <p>“{item.text}”</p>
-              <div>
-                <strong>{item.name}</strong>
-                <span>{item.role}</span>
-              </div>
+              <div><strong>{item.name}</strong><span>{item.role}</span></div>
             </div>
           ))}
         </div>
@@ -284,34 +255,30 @@ function HomePage() {
       <footer className="footer">
         <div>
           <h3>For workers</h3>
-          <p>How it works</p>
-          <p>Find gigs</p>
-          <p>Profile tips</p>
-          <p>FAQ</p>
+          <Link to="/tasks"><p>Find gigs</p></Link>
+          <Link to="/register"><p>Create account</p></Link>
+          <Link to="/profile"><p>Your profile</p></Link>
         </div>
 
         <div>
           <h3>For companies</h3>
-          <p>Post a task</p>
-          <p>Pricing</p>
-          <p>Hiring dashboard</p>
-          <p>Business support</p>
+          <Link to="/post-gig"><p>Post a task</p></Link>
+          <Link to="/dashboard"><p>Hiring dashboard</p></Link>
+          <Link to="/freelancers"><p>Browse talent</p></Link>
         </div>
 
         <div>
           <h3>QuickHire</h3>
-          <p>About</p>
-          <p>Careers</p>
-          <p>Contact</p>
-          <p>Privacy Policy</p>
+          <Link to="/"><p>Home</p></Link>
+          <Link to="/tasks"><p>Marketplace</p></Link>
+          <Link to="/dashboard"><p>Dashboard</p></Link>
         </div>
 
         <div>
-          <h3>Resources</h3>
-          <p>API Documentation</p>
-          <p>Recommendation System</p>
-          <p>Security</p>
-          <p>Terms of Use</p>
+          <h3>Categories</h3>
+          {CATEGORIES.slice(0, 4).map((c) => (
+            <Link key={c.title} to={`/tasks?category=${encodeURIComponent(c.title)}`}><p>{c.title}</p></Link>
+          ))}
         </div>
       </footer>
     </>
