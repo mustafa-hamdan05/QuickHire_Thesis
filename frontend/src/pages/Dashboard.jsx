@@ -2,13 +2,38 @@ import React, { useEffect, useState } from "react";
 
 const API_URL = "https://quickhire-backend-5jdz.onrender.com/api";
 
+function timeAgo(iso) {
+  if (!iso) return "Recently";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "Recently";
+  const diff = Date.now() - d.getTime();
+  const day = 86400000;
+  if (diff < day) return "Today";
+  if (diff < 2 * day) return "Yesterday";
+  return Math.floor(diff / day) + "d ago";
+}
+
 export default function Dashboard() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-  // Skills/location from the user's Profile page (for matching)
-  const profile = JSON.parse(localStorage.getItem(`profile:${user.email || "guest"}`) || "null");
-  const skills = profile && profile.skills ? profile.skills : (user.skills || "React, CSS, HTML");
-  const location = profile && profile.location ? profile.location : (user.location || "");
+  // Profile fields: prefer what was saved on the Profile page, else the account's own data
+  const savedProfile = JSON.parse(localStorage.getItem(`profile:${user.email || "guest"}`) || "null") || {};
+  const pSkills = savedProfile.skills ?? user.skills ?? "";
+  const pBio = savedProfile.bio ?? user.bio ?? "";
+  const pLocation = savedProfile.location ?? user.location ?? "";
+  const pAvailability = savedProfile.availability ?? user.availability ?? "";
+  const pRating = savedProfile.rating ?? user.rating ?? 0;
+
+  // Real profile-progress numbers
+  const skillCount = String(pSkills).split(",").map((s) => s.trim()).filter(Boolean).length;
+  const skillsPct = Math.min(100, Math.round((skillCount / 5) * 100));
+  const detailsFilled = [pBio, pLocation, pAvailability].filter((v) => String(v || "").trim()).length;
+  const detailsPct = Math.round((detailsFilled / 3) * 100);
+  const ratingPct = Math.round((Math.min(5, Number(pRating) || 0) / 5) * 100);
+  const overallPct = Math.round((skillsPct + detailsPct + ratingPct) / 3);
+
+  const skills = pSkills || "React, CSS, HTML";
+  const location = pLocation || "";
 
   const [taskCount, setTaskCount] = useState(null);
   const [apps, setApps] = useState([]);
@@ -16,7 +41,6 @@ export default function Dashboard() {
   const [recs, setRecs] = useState([]);
   const [recState, setRecState] = useState("loading"); // loading | done | error
 
-  // live gig count
   useEffect(() => {
     let active = true;
     fetch(`${API_URL}/tasks`)
@@ -26,7 +50,6 @@ export default function Dashboard() {
     return () => { active = false; };
   }, []);
 
-  // applications from the database
   useEffect(() => {
     let active = true;
     fetch(`${API_URL}/applications`)
@@ -36,7 +59,6 @@ export default function Dashboard() {
     return () => { active = false; };
   }, []);
 
-  // recommendations from the matching engine
   useEffect(() => {
     let active = true;
     setRecState("loading");
@@ -56,6 +78,26 @@ export default function Dashboard() {
   const accepted = apps.filter((a) => a.status === "accepted");
   const earnings = accepted.reduce((sum, a) => sum + (a.task && a.task.hourlyRate ? a.task.hourlyRate : 0), 0);
 
+  const topMatch = recState === "done" && recs.length ? recs[0] : null;
+
+  // Real recent-activity feed
+  const email = (user.email || "").toLowerCase();
+  const myApps = apps
+    .filter((a) => a.freelancer && (a.freelancer.email || "").toLowerCase() === email)
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  const activitySource = myApps.length ? myApps : [...apps].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+  const activity = [];
+  if (topMatch) {
+    activity.push({ when: "Now", text: `Top match: ${topMatch.task ? topMatch.task.title : "a gig"} (${topMatch.score}%)` });
+  }
+  activitySource.slice(0, 4).forEach((a) => {
+    activity.push({
+      when: timeAgo(a.createdAt),
+      text: `${a.freelancer ? a.freelancer.name : "Someone"} applied to ${a.task ? a.task.title : "a gig"} · ${a.status}`,
+    });
+  });
+
   return (
     <div className="dashPage">
       <div className="dashHero">
@@ -67,8 +109,8 @@ export default function Dashboard() {
 
         <div className="dashHeroCard">
           <span>AI Match Health</span>
-          <strong>94%</strong>
-          <p>Your profile is performing strongly this week.</p>
+          <strong>{topMatch ? `${topMatch.score}%` : "—"}</strong>
+          <p>{topMatch ? `Your top match: ${topMatch.task ? topMatch.task.title : "a gig"}` : "Generating your matches…"}</p>
         </div>
       </div>
 
@@ -143,36 +185,39 @@ export default function Dashboard() {
         <section className="dashPanel">
           <div className="panelHeader">
             <h2>Profile progress</h2>
-            <span>86%</span>
+            <span>{overallPct}%</span>
           </div>
 
           <div className="progressBox">
-            <p>Skills added</p>
-            <div className="progressLine"><div style={{ width: "90%" }}></div></div>
+            <p>Skills added ({skillCount})</p>
+            <div className="progressLine"><div style={{ width: `${skillsPct}%` }}></div></div>
           </div>
 
           <div className="progressBox">
-            <p>Availability</p>
-            <div className="progressLine"><div style={{ width: "78%" }}></div></div>
+            <p>Profile details</p>
+            <div className="progressLine"><div style={{ width: `${detailsPct}%` }}></div></div>
           </div>
 
           <div className="progressBox">
-            <p>Verification</p>
-            <div className="progressLine"><div style={{ width: "65%" }}></div></div>
+            <p>Rating</p>
+            <div className="progressLine"><div style={{ width: `${ratingPct}%` }}></div></div>
           </div>
         </section>
 
         <section className="dashPanel">
           <div className="panelHeader">
-            <h2>Weekly activity</h2>
+            <h2>Recent activity</h2>
             <span>Live</span>
           </div>
 
           <div className="activityList">
-            <p><b>Today:</b> 2 new gig matches</p>
-            <p><b>Yesterday:</b> Application accepted</p>
-            <p><b>Monday:</b> Profile score increased</p>
-            <p><b>Sunday:</b> New freelancer joined your category</p>
+            {activity.length === 0 ? (
+              <p>No recent activity yet — apply to a gig to get started.</p>
+            ) : (
+              activity.map((a, i) => (
+                <p key={i}><b>{a.when}:</b> {a.text}</p>
+              ))
+            )}
           </div>
         </section>
       </div>
