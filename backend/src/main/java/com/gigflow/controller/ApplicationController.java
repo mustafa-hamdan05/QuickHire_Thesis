@@ -32,7 +32,6 @@ public class ApplicationController {
         return applications.findAll();
     }
 
-    // Body: { "taskId": 3, "freelancerEmail": "sara@quickhire.com", "message": "..." }
     @PostMapping
     public Application create(@RequestBody Map<String, String> body) {
         Long taskId = Long.valueOf(body.get("taskId"));
@@ -50,11 +49,16 @@ public class ApplicationController {
         return applications.save(app);
     }
 
-    // Body: { "status": "accepted" }
     @PutMapping("/{id}")
     public Application updateStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
         Application app = applications.findById(id).orElseThrow(() -> new RuntimeException("Application not found"));
         app.setStatus(body.getOrDefault("status", app.getStatus()));
         return applications.save(app);
+    }
+
+    // Withdraw an application
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable Long id) {
+        applications.deleteById(id);
     }
 }
