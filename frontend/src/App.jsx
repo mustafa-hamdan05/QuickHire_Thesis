@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect } from "react";
 import { Routes, Route, Navigate, Link, useNavigate } from "react-router-dom";
+import FreelancerProfile from "./pages/FreelancerProfile.jsx";
 
 import Navbar from "./components/Navbar.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
@@ -316,6 +317,7 @@ export default function App() {
 
       <Route path="/dashboard" element={<Protected><><Navbar /><Dashboard /></></Protected>} />
       <Route path="/freelancers" element={<Protected><><Navbar /><Freelancers /></></Protected>} />
+      <Route path="/freelancers/:id" element={<Protected><><Navbar /><FreelancerProfile /></></Protected>} />
       <Route path="/applications" element={<Protected><><Navbar /><Applications /></></Protected>} />
       <Route path="/profile" element={<Protected><><Navbar /><Profile /></></Protected>} />
     </Routes>
