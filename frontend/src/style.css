@@ -1556,3 +1556,28 @@ a.categoryCard { color: inherit; text-decoration: none; }
 @media (max-width: 900px) {
   .statsBand, .howSteps { grid-template-columns: 1fr 1fr; }
 }
+/* Testimonial stars + blank avatar */
+.testimonialCard .stars {
+  font-size: 18px;
+  letter-spacing: 3px;
+  margin-bottom: 14px;
+}
+.testimonialCard .stars .starsFull { color: #f5a623; }
+.testimonialCard .stars .starsEmpty { color: #d7dbe2; }
+
+.testimonialAuthor {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+.avatarBlank {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border-radius: 50%;
+  background: #eef1f6;
+  display: grid;
+  place-items: center;
+}
+.avatarBlank svg { width: 28px; height: 28px; fill: #aab2bf; }

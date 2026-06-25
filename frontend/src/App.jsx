@@ -75,10 +75,10 @@ function HomePage() {
   const skillsOf = (csv) => String(csv || "").split(",").map((s) => s.trim()).filter(Boolean);
 
   const testimonials = [
-    { text: "QuickHire helped me find flexible freelance work while studying. I can choose tasks that fit my schedule.", name: "Sara Ahmed", role: "Frontend Freelancer" },
-    { text: "The matching system makes it easier to find suitable workers quickly instead of searching manually.", name: "Daniel Kovacs", role: "Client Manager" },
-    { text: "I like seeing match scores, skills, and availability before applying. It makes the process much faster.", name: "Mira Hassan", role: "Support Specialist" },
-  ];
+      { text: "QuickHire helped me find flexible freelance work while studying. I can choose tasks that fit my schedule.", name: "Sara Ahmed", role: "Frontend Freelancer", rating: 5 },
+      { text: "The matching system makes it easier to find suitable workers quickly instead of searching manually.", name: "Daniel Kovacs", role: "Client Manager", rating: 5 },
+      { text: "I like seeing match scores, skills, and availability before applying. It makes the process much faster.", name: "Mira Hassan", role: "Support Specialist", rating: 4 },
+    ];
 
   return (
     <>
@@ -244,13 +244,26 @@ function HomePage() {
         </div>
 
         <div className="testimonialGrid">
-          {testimonials.map((item) => (
-            <div className="testimonialCard" key={item.name}>
-              <p>“{item.text}”</p>
-              <div><strong>{item.name}</strong><span>{item.role}</span></div>
-            </div>
-          ))}
-        </div>
+                  {testimonials.map((item) => (
+                    <div className="testimonialCard" key={item.name}>
+                      <div className="stars" aria-label={`${item.rating} out of 5`}>
+                        <span className="starsFull">{"★".repeat(item.rating)}</span>
+                        <span className="starsEmpty">{"★".repeat(5 - item.rating)}</span>
+                      </div>
+
+                      <p>“{item.text}”</p>
+
+                      <div className="testimonialAuthor">
+                        <div className="avatarBlank">
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z" />
+                          </svg>
+                        </div>
+                        <div><strong>{item.name}</strong><span>{item.role}</span></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
       </section>
 
       <footer className="footer">
